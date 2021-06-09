@@ -1,0 +1,11 @@
+export const PENDING_BILL_SCREEN = 'PendingBillScreen';
+export const PAID_BILL_SCREEN = 'PaidBillScreen';
+export const ADD_NEW_BILL = 'AddNewBillScreen';
+export const PENDING_SCREEN_STACK = 'PendingScreenStack';
+export const TOP_TAB = 'TopTabBar';
+export const PARTICULAR_BILL = 'ParticularBILL';
+export const PAID_BILL_SCREEN_STACk = 'PaidBillScreenStack';
+export const BILL_IN_DETAIL = 'BillInDetail';
+export const NEW_PAID_SCREEN = 'NewPaidScreen';
+export const SEARCH_SCREEN = 'SearchScreen';
+export const SETTINGS_SCREEN = 'Setting_Screen';
