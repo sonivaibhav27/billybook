@@ -9,18 +9,27 @@ import {AppProvider} from '../../components/Provider';
 
 const RowItem = ({title, onPress = () => {}, userPrefer}) => {
   return (
-    <View
-      style={{
-        marginTop: 20,
-      }}>
+    <View style={styles.rowContainer}>
       <Text>Currency</Text>
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={1}
-        style={styles.rowContainer}>
-        <Text style={styles.rowText}>{title}</Text>
-        <Text style={[styles.rowText]}>{userPrefer}</Text>
-      </TouchableOpacity>
+      <View
+        style={{
+          flexDirection: 'row',
+          marginTop: 5,
+        }}>
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flex: 1,
+            paddingHorizontal: 10,
+          }}
+          onPress={onPress}
+          activeOpacity={1}>
+          <Text style={styles.rowText}>Default {title}</Text>
+          <Text style={[styles.rowText]}>{userPrefer} ></Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -144,7 +153,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundColor,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
   },
   rowContainer: {
     // marginHorizontal: 20,
@@ -153,12 +162,13 @@ const styles = StyleSheet.create({
     // paddingVertical: 5,
     padding: 10,
     marginTop: 10,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexDirection: 'row',
+    // justifyContent: 'space-between',
+    // alignItems: 'center',
+    // flexDirection: 'row',
   },
   rowText: {
-    fontSize: 18,
+    fontSize: 15,
+    color: '#222',
   },
 });
 

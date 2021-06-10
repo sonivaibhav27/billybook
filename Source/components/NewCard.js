@@ -1,5 +1,12 @@
 import * as React from 'react';
-import {Animated, Dimensions, StyleSheet, Text, View} from 'react-native';
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import moment from 'moment';
 import {AntDesign} from './Icons';
 import {useNavigation} from '@react-navigation/core';
@@ -32,7 +39,7 @@ const RowItem = React.memo(({label, itemText, style, ...rest}) => {
   );
 });
 
-class NewCard extends React.Component {
+class _NewCard extends React.Component {
   // const navigation = useNavigation();
   constructor(props) {
     super(props);
@@ -60,9 +67,9 @@ class NewCard extends React.Component {
   // }, [userPreferences]);
 
   goToBillInDetail = () => {
-    navigation.navigate(BILL_IN_DETAIL, {
-      item,
-      over: overdue,
+    this.props.navigation.navigate(BILL_IN_DETAIL, {
+      item: this.props.item,
+      over: this.props.overdue,
     });
   };
 
@@ -81,8 +88,10 @@ class NewCard extends React.Component {
     // console.log('Called New Card ...');
     const {item, overdue, isPaid} = this.props;
     return (
-      <View style={[styles.container]}>
-        <View style={{flexDirection: 'row'}}>
+      <PressableButton
+        onPress={this.goToBillInDetail}
+        style={[styles.container]}>
+        <View>
           <RowItem
             label="Bill Name"
             itemText={item.billName}
@@ -90,6 +99,7 @@ class NewCard extends React.Component {
           />
           <RowItem
             label={isPaid ? 'Paid On' : 'Due Date'}
+            style={{marginTop: 10}}
             itemText={
               isPaid
                 ? moment(item.paidOn, 'YYYYMMDD').format('MMM D, YYYY')
@@ -99,46 +109,49 @@ class NewCard extends React.Component {
         </View>
 
         <View
-          style={{
-            flexDirection: 'row',
-            marginTop: 15,
-          }}>
+          style={
+            {
+              // flexDirection: 'row',
+              // marginTop: 15,
+            }
+          }>
           <RowItem
             label="Bill Category"
             itemText={item.type}
-            style={{width: width * 0.5}}
+            // style={{width: width * 0.5, backgroundColor: 'red'}}
           />
           <RowItem
             label="Amount"
             itemText={this.state.amountRefined}
             numberOfLines={2}
+            style={{marginTop: 10, maxWidth: 100}}
           />
-
-          <View style={styles.buttonContainer}>
-            <PressableButton
-              rippleColor={
-                isPaid
+        </View>
+        {/* 
+        <View style={styles.buttonContainer}>
+          <PressableButton
+            rippleColor={
+              isPaid
+                ? 'rgba(0, 171, 102, 0.8)'
+                : overdue
+                ? '#EA5A72'
+                : '#2771C5'
+            }
+            onPress={this.goToBillInDetail}
+            style={[
+              styles.button,
+              {
+                backgroundColor: isPaid
                   ? 'rgba(0, 171, 102, 0.8)'
                   : overdue
                   ? '#EA5A72'
-                  : '#2771C5'
-              }
-              onPress={this.goToBillInDetail}
-              style={[
-                styles.button,
-                {
-                  backgroundColor: isPaid
-                    ? 'rgba(0, 171, 102, 0.8)'
-                    : overdue
-                    ? '#EA5A72'
-                    : '#2771C5',
-                },
-              ]}>
-              <AntDesign color="#fff" size={20} name="arrowright" />
-            </PressableButton>
-          </View>
-        </View>
-      </View>
+                  : '#2771C5',
+              },
+            ]}>
+            <AntDesign color="#fff" size={20} name="arrowright" />
+          </PressableButton>
+        </View> */}
+      </PressableButton>
     );
   }
 }
@@ -146,13 +159,18 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 10,
     backgroundColor: '#fff',
-    elevation: 1,
+    // elevation: 1,
     borderRadius: 8,
-    padding: 10,
+    paddingHorizontal: 10,
     marginVertical: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   rowContainer: {
-    height: height * 0.05,
+    // height: height * 0.05,
   },
   rowLabel: {
     fontSize: 12,
@@ -165,9 +183,9 @@ const styles = StyleSheet.create({
     color: '#121212',
   },
   buttonContainer: {
-    position: 'absolute',
-    right: 0,
-    bottom: 20,
+    // position: 'absolute',
+    // right: 0,
+    // bottom: 20,
   },
   button: {
     backgroundColor: '#2771C5',
@@ -178,5 +196,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+const NewCard = props => {
+  const navigation = useNavigation();
+  return <_NewCard navigation={navigation} {...props} />;
+};
 
 export default React.memo(NewCard);

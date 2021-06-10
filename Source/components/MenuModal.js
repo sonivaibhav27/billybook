@@ -67,12 +67,12 @@ const MenuModal = ({closeMenuModal}) => {
         <Item item="Paid Bills" />
       </PressableButton>
       <Item item="Reports" />
-      <TouchableOpacity activeOpacity={1} onPress={navigateToSettingsScreen}>
+      <PressableButton borderless={false} onPress={navigateToSettingsScreen}>
         <Item item="Setting" />
-      </TouchableOpacity>
-      <TouchableOpacity activeOpacity={1} onPress={closeMenu}>
+      </PressableButton>
+      <PressableButton borderless={false} onPress={closeMenu}>
         <Item item="Close" />
-      </TouchableOpacity>
+      </PressableButton>
     </Animated.View>
   );
 };
@@ -92,18 +92,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     elevation: 1,
     // elevation: 1,
-    borderRadius: 8,
+    borderRadius: 1,
   },
   textContainer: {
     padding: 8,
     paddingHorizontal: 20,
-    // borderBottomWidth: 0.8,
     borderColor: '#eee',
-    paddingVertical: 20,
+    marginTop: 4,
   },
   text: {
     fontSize: 18,
-    // textAlign: 'center',
   },
 });
 

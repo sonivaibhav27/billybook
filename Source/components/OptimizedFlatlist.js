@@ -78,7 +78,8 @@ class OptimizedFlatist extends React.Component {
   shouldComponentUpdate = (nextProps, nextState) => {
     this.isSame =
       nextProps.allData.length != this.props.allData.length ||
-      nextState.listData.length != this.state.listData.length;
+      nextState.listData.length != this.state.listData.length ||
+      nextProps.data.length != this.props.data;
     if (this.isSame) {
       if (!this.checkIfBothArraySame(this.props.data, nextProps.data)) {
         this.setState({

@@ -34,6 +34,7 @@ import OptimizedFlatlist from '../../components/OptimizedFlatlist';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import SortModal from '../../components/SortModal';
 import {useNavigation} from '@react-navigation/core';
+import moment from 'moment';
 const {width, height} = Dimensions.get('window');
 const topNavs = [
   {name: 'Pending Bills', bgColors: Colors.primary, ref: React.createRef()},
@@ -201,7 +202,27 @@ const ListOfBills = React.memo(
     }, [navigation]);
 
     const billChangeListener = (bill, changes) => {
-      console.log('Insertions', changes.insertions);
+      // console.log('Insertions', changes.insertions);
+      if (changes.insertions.length != 0) {
+        // let pendingBills = [];
+        // let overdueBills = [];
+        // let today = Number(moment().format('YYYYMMDD'));
+        const a = sortThisMonthBillByDate(BillSchema, false);
+        const paginated = returnPaginatedData(0, 10, a);
+        setAllData(a);
+        setData(paginated);
+
+        // changes.insertions.forEach(index => {
+        //   if (bill[index].due < today) {
+        //     overdueBills.push(bill[index]);
+        //   } else {
+        //     pendingBills.push(bill[index]);
+        //   }
+        // });
+        // setData(pendingBills);
+
+        // setOverDueBills(overdueBills);
+      }
       // changes.insertions.forEach(index => {
       //   console.log(bill[index]);
       //   if (showVisibility === 'All Bill') {

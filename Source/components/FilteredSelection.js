@@ -33,6 +33,7 @@ const FilteredSelection = ({thisMonthOrAllCallback}) => {
         }),
       }}>
       <PressableButton
+        borderless={false}
         onPress={() => {
           // callAnimation(0);
           Animated.timing(_mount, {
@@ -58,7 +59,7 @@ const FilteredSelection = ({thisMonthOrAllCallback}) => {
         </Text>
       </PressableButton>
       <PressableButton
-        activeOpacity={1}
+        borderless={false}
         onPress={() => {
           Animated.timing(_mount, {
             toValue: 0,
