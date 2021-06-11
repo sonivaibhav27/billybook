@@ -9,13 +9,14 @@ const getTodayDate = () => {
 export const getAllDataFromRealm = realmObject => {
   return realmObject.objects('Billl');
 };
+// BillSchema.objects().sorted(a,)
 
-export const sortByDate = (billInstance, sortDescending) => {
+export const sortByDate = (billInstance, sortDescending, on = 'due') => {
   const todayDate = getTodayDate();
   const endOfYear = Number(moment().add(1, 'y').format('YYYYMMDD'));
   return getAllDataFromRealm(billInstance)
     .filtered('due >= $0 && due <= $1', todayDate, endOfYear)
-    .sorted('due', sortDescending);
+    .sorted(on, sortDescending);
 };
 
 export const sortThisMonthBillByDate = (billInstance, sortDescending) => {

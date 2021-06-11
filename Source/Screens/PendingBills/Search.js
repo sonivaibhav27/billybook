@@ -13,35 +13,31 @@ import moment from 'moment';
 import {AntDesign} from '../../components/Icons';
 import {Colors} from '../../components/Color';
 import NewCard from '../../components/NewCard';
-import {getAllBillForSearch} from '../../databases/realm.helper';
+import {
+  getAllBillForSearch,
+  returnPaginatedData,
+  sortByDate,
+} from '../../databases/realm.helper';
 import BillSchema from '../../DB/NewSch';
 import PressableButton from '../../components/PressableButton';
 import OptimizedFlatlist from '../../components/OptimizedFlatlist';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
 const {width} = Dimensions.get('window');
-const Search = ({data}) => {
+const Search = ({data, allData}) => {
   React.useEffect(() => {}, []);
   const todayDate = Number(moment().format('YYYYMMDD'));
-  const renderBills = ({item, index}) => {
-    return (
-      <NewCard
-        item={item}
-        key={index.toString()}
-        overdue={item.due < todayDate}
-      />
-    );
-  };
-  const EmptyData = () => {
-    return (
-      <View>
-        <Text>No Data</Text>
-      </View>
-    );
+  const renderBills = ({item}) => {
+    return <NewCard item={item} overdue={item.due < todayDate} />;
   };
   return (
-    <View style={{flex: 1}}>
-      <OptimizedFlatlist uniqueId={1} data={data} renderItem={renderBills} />
+    <View style={{flex: 1, zIndex: -1000}}>
+      <OptimizedFlatlist
+        style={{flex: 1}}
+        allData={allData}
+        data={data}
+        renderItem={renderBills}
+      />
     </View>
   );
 };
@@ -49,6 +45,7 @@ const Search = ({data}) => {
 const SearchBillScreen = ({navigation}) => {
   const [data, setData] = React.useState([]);
   const [allData, setAllData] = React.useState([]);
+  const [entireData, setEntireData] = React.useState([]);
   const [searchText, setSearchText] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   React.useEffect(() => {
@@ -59,18 +56,22 @@ const SearchBillScreen = ({navigation}) => {
   };
 
   const getData = async () => {
-    const data = await getAllBillForSearch(BillSchema);
+    const data = await sortByDate(BillSchema, false);
+    const paginatedData = returnPaginatedData(0, 10, data);
     console.log('Data', data);
     setAllData(data);
-    setData(data);
+    setEntireData(data);
+    setData(paginatedData);
     setLoading(false);
   };
   const changeText = async e => {
     setSearchText(e);
-    const d = allData.filter(bill => {
+    const d = entireData.filter(bill => {
       return bill.billName.includes(e);
     });
-    setData(d);
+    setAllData(d);
+    const paginatedData = returnPaginatedData(0, 10, d);
+    setData(paginatedData);
   };
   if (loading) {
     return <LoadingIndicator title="Loading Bills..." />;
@@ -90,7 +91,9 @@ const SearchBillScreen = ({navigation}) => {
           onChangeText={changeText}
         />
       </View>
-      {data.length != 0 && <Search data={data} searchText={searchText} />}
+      {data.length != 0 && (
+        <Search allData={allData} data={data} searchText={searchText} />
+      )}
     </View>
   );
 };
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     padding: 5,
     marginTop: 8,
     // elevation: 1,
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 10,
     color: '#222',
+    // zIndex: 1000,
   },
 });
 export default SearchBillScreen;

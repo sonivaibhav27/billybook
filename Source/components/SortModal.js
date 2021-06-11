@@ -8,11 +8,45 @@ import {
   Dimensions,
 } from 'react-native';
 import {Easing} from 'react-native-reanimated';
-import {Entypo} from './Icons';
+import {AntDesign, Entypo} from './Icons';
+import PressableButton from './PressableButton';
 
 const {height} = Dimensions.get('window');
-export default function SortModal({closeSortModal}) {
-  const [lHeight, setLHeight] = React.useState(null);
+
+const ICON_SIZE = 20;
+function Item({label, up = true, onPress, closeModal, ...rest}) {
+  const itemPress = () => {
+    onPress(
+      label === 'Date' ? 'due' : 'billAmount',
+      up === true ? true : false,
+    );
+    closeModal();
+  };
+  return (
+    <PressableButton
+      onPress={itemPress}
+      rippleColor="#999"
+      {...rest}
+      borderless={false}>
+      <Text
+        style={{
+          fontFamily: 'Raleway-Medium',
+          fontSize: 18,
+          padding: 10,
+          textAlign: 'center',
+        }}>
+        {label}{' '}
+        {up ? (
+          <AntDesign name="arrowup" size={ICON_SIZE} />
+        ) : (
+          <AntDesign name="arrowdown" size={ICON_SIZE} />
+        )}
+      </Text>
+    </PressableButton>
+  );
+}
+
+export default function SortModal({closeSortModal, itemOnPress}) {
   const _mount = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -23,10 +57,7 @@ export default function SortModal({closeSortModal}) {
       useNativeDriver: true,
     }).start();
   }, []);
-  const layout = e => {
-    setLHeight(e.nativeEvent.layout.height);
-    // setLoading(false);
-  };
+
   const onPress = () => {
     Animated.timing(_mount, {
       toValue: 0,
@@ -39,21 +70,9 @@ export default function SortModal({closeSortModal}) {
   };
   return (
     <Animated.View
-      onLayout={layout}
       style={[
+        styles.container,
         {
-          backgroundColor: '#eee',
-          borderRadius: 8,
-          padding: 10,
-          borderTopStartRadius: 20,
-          borderTopEndRadius: 20,
-          zIndex: 100,
-          position: 'absolute',
-          right: 0,
-          left: 0,
-          height: height * 0.4,
-          bottom: 0,
-
           transform: [
             {
               translateY: _mount.interpolate({
@@ -70,112 +89,75 @@ export default function SortModal({closeSortModal}) {
           }),
         },
       ]}>
-      {lHeight != null && (
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-          }}>
-          <View>
-            <Text
-              style={{
-                fontSize: 18,
-                fontFamily: 'Raleway-SemiBold',
-                textAlign: 'center',
-                color: '#000',
-              }}>
-              Sort By
-            </Text>
-          </View>
-          <TouchableOpacity
-            //   onPress={() => {
-            //     animatedValue.value = withTiming(0);
-            //   }}
-            onPress={onPress}
-            activeOpacity={0.9}
-            hitSlop={{
-              top: 10,
-              bottom: 10,
-              left: 10,
-              right: 10,
-            }}
-            style={{position: 'absolute', top: 0, right: 10}}>
-            <Entypo name="cross" size={30} />
-          </TouchableOpacity>
-          <View
-            style={{
-              justifyContent: 'center',
-              flex: 0.8,
-              //   flexDirection: 'row',
-            }}>
-            <View
-              style={{
-                padding: 8,
-              }}>
-              <Text
-                style={{
-                  fontFamily: 'Raleway-Medium',
-                  fontSize: 18,
-                  padding: 10,
-                  borderBottomWidth: 2,
-                  borderColor: '#eee',
-                }}>
-                Date (Ascending)
-              </Text>
-              <Text
-                style={{
-                  fontFamily: 'Raleway-Medium',
-                  fontSize: 18,
-                  padding: 10,
-                  borderBottomWidth: 2,
-                  borderColor: '#eee',
-                }}>
-                Date (Descending)
-              </Text>
-            </View>
-            <View style={{padding: 8}}>
-              <TouchableOpacity
-                //   onPress={() => sortBy('amount', false)}
-                hitSlop={{
-                  left: 5,
-                  right: 5,
-                  bottom: 5,
-                  top: 5,
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Raleway-Medium',
-                    fontSize: 18,
-                    padding: 10,
-                    borderBottomWidth: 2,
-                    borderColor: '#eee',
-                  }}>
-                  Amount (Ascending)
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                //   onPress={() => sortBy('amount', true)}
-                hitSlop={{
-                  left: 5,
-                  right: 5,
-                  bottom: 5,
-                  top: 5,
-                }}>
-                <Text
-                  style={{
-                    fontFamily: 'Raleway-Medium',
-                    fontSize: 18,
-                    padding: 10,
-                    borderBottomWidth: 2,
-                    borderColor: '#eee',
-                  }}>
-                  Amount (Descending)
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
+      <View style={styles.headerContainer}>
+        <Text style={styles.sortText}>Sort By</Text>
+        <TouchableOpacity
+          //   onPress={() => {
+          //     animatedValue.value = withTiming(0);
+          //   }}
+          onPress={onPress}
+          activeOpacity={0.9}
+          hitSlop={styles.hitSlop}
+          style={{position: 'absolute', top: 5, right: 10}}>
+          <Entypo name="cross" size={30} />
+        </TouchableOpacity>
+      </View>
+
+      <Item
+        closeModal={closeSortModal}
+        onPress={itemOnPress}
+        label="Date"
+        style={{marginTop: 10}}
+      />
+      <Item
+        closeModal={closeSortModal}
+        onPress={itemOnPress}
+        label="Date"
+        up={false}
+      />
+
+      <Item closeModal={closeSortModal} onPress={itemOnPress} label="Amount" />
+      <Item
+        closeModal={closeSortModal}
+        onPress={itemOnPress}
+        label="Amount"
+        up={false}
+      />
     </Animated.View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#f1f1f1',
+    borderRadius: 8,
+    padding: 10,
+    borderTopStartRadius: 20,
+    borderTopEndRadius: 20,
+    zIndex: 100,
+    position: 'absolute',
+    right: 0,
+    left: 0,
+    // height: height * 0.3,
+    bottom: 0,
+  },
+  headerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+  },
+  sortText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  hitSlop: {
+    top: 10,
+    bottom: 10,
+    left: 10,
+    right: 10,
+  },
+});

@@ -1,4 +1,6 @@
 package com.billybookranuja; // replace com.your-app-name with your app’s name
+import android.content.pm.PackageInfo;
+
 import androidx.annotation.NonNull;
 import java.text.NumberFormat;
 import com.facebook.react.bridge.Callback;
@@ -28,6 +30,18 @@ public class MoneyFormatModule extends ReactContextBaseJavaModule {
         c.invoke(format.format(amount));
     }
 
+    @ReactMethod
+    public  void getAndroidVersion(Callback callback){
+        try{
+            PackageInfo packageInfo  = mContext.getPackageManager().getPackageInfo(mContext.getOpPackageName(),0);
+            String androidVersion = packageInfo.versionName;
+            callback.invoke(androidVersion,null);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            callback.invoke(null,e.getMessage());
+        }
+    }
     @ReactMethod
     public  void getLocaleCurrency(Callback callback){
         Locale locale = mContext.getResources().getConfiguration().locale;

@@ -156,7 +156,7 @@ const Tabbb = ({scrollX, onItemPress, c, overdueBadge}) => {
 };
 
 const ListOfBills = React.memo(
-  forwardRef(({showVisibility, SCROLLAnimated}, scrollRef) => {
+  forwardRef(({sortingType, SCROLLAnimated}, scrollRef) => {
     const navigation = useNavigation();
     const [_lastStateScreenIndex, _setLastStateScreenIndex] = React.useState(0);
     const [data, setData] = React.useState([]);
@@ -166,27 +166,37 @@ const ListOfBills = React.memo(
     React.useEffect(() => {
       const d = getOverdueBills(BillSchema);
       let paginated = returnPaginatedData(0, 10, d);
-      setOverDueBills(paginated);
-      // setAllOverdueData(d);
-    }, []);
+      const allBillPendingData = sortByDate(
+        BillSchema,
+        sortingType.type,
+        sortingType.technique,
+      );
 
-    React.useEffect(() => {
-      if (showVisibility === 'This Month') {
-        const d = sortThisMonthBillByDate(BillSchema, false);
-        const paginated = returnPaginatedData(0, 10, d);
-        console.log('Paginated Data =>,', paginated);
-        setData(paginated);
-        setLoading(false);
-        setAllData(d);
-      } else {
-        console.log('Sort by date...');
-        const d = sortByDate(BillSchema, false);
-        const paginated = returnPaginatedData(0, 10, d);
-        setAllData(d);
-        setData(paginated);
-        setLoading(false);
-      }
-    }, [showVisibility]);
+      let pgPendData = returnPaginatedData(0, 10, allBillPendingData);
+      setData(pgPendData);
+      setAllData(allBillPendingData);
+      setOverDueBills(paginated);
+      setLoading(false);
+      // setAllOverdueData(d);
+    }, [sortingType.technique, sortingType.type]);
+
+    // React.useEffect(() => {
+    //   if (showVisibility === 'This Month') {
+    //     const d = sortThisMonthBillByDate(BillSchema, false);
+    //     const paginated = returnPaginatedData(0, 10, d);
+    //     console.log('Paginated Data =>,', paginated);
+    //     setData(paginated);
+    //     setLoading(false);
+    //     setAllData(d);
+    //   } else {
+    //     console.log('Sort by date...');
+    //     const d = sortByDate(BillSchema, false);
+    //     const paginated = returnPaginatedData(0, 10, d);
+    //     setAllData(d);
+    //     setData(paginated);
+    //     setLoading(false);
+    //   }
+    // }, [showVisibility]);
 
     React.useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
@@ -202,41 +212,19 @@ const ListOfBills = React.memo(
     }, [navigation]);
 
     const billChangeListener = (bill, changes) => {
-      // console.log('Insertions', changes.insertions);
       if (changes.insertions.length != 0) {
-        // let pendingBills = [];
-        // let overdueBills = [];
-        // let today = Number(moment().format('YYYYMMDD'));
-        const a = sortThisMonthBillByDate(BillSchema, false);
+        const a = sortByDate(
+          BillSchema,
+          sortingType.type,
+          sortingType.technique,
+        );
         const paginated = returnPaginatedData(0, 10, a);
         setAllData(a);
         setData(paginated);
-
-        // changes.insertions.forEach(index => {
-        //   if (bill[index].due < today) {
-        //     overdueBills.push(bill[index]);
-        //   } else {
-        //     pendingBills.push(bill[index]);
-        //   }
-        // });
-        // setData(pendingBills);
-
-        // setOverDueBills(overdueBills);
       }
-      // changes.insertions.forEach(index => {
-      //   console.log(bill[index]);
-      //   if (showVisibility === 'All Bill') {
-      //     setData([...data, bill[index]]);
-      //   } else {
-      //     setData([...data, bill[index]]);
-      //   }
-      // });
     };
     const SIDE_MARGIN = 20;
 
-    function isInt(num) {
-      return num % 1 === 0;
-    }
     const deleteBill = React.useCallback(item => {
       Alert.alert('Delete', `Want to delete Bill ${item.billName}`, [
         {
@@ -306,7 +294,6 @@ const ListOfBills = React.memo(
                   data={data}
                   allData={allData}
                   overdue={false}
-                  visibility={showVisibility}
                 />
               );
             } else {
@@ -329,25 +316,16 @@ const ListOfBills = React.memo(
 );
 const PendingBillNew = ({navigation}) => {
   // const scrollX = useSharedValue(0);
-  const RNAnimated = React.useRef(new Animated.Value(0)).current;
   const SCROLLAnimated = React.useRef(new Animated.Value(0)).current;
   const scrollRef = React.useRef();
-  const [btnLayout, setButtonLayout] = React.useState(0);
-  const [_devCount, _setDevCount] = React.useState(0);
-  const [showVisibility, setShowVisibility] = React.useState('This Month');
-  const [visibleModal, setShowModal] = React.useState(false);
   const [openMenuModal, setOpenMenuModal] = React.useState(false);
   const [showSortModal, setShowSortModal] = React.useState(false);
   const [sortingType, setSortingtype] = React.useState({
-    technique: 'due',
-    type: 'asc',
+    technique: 'billAmount',
+    type: true,
   });
   const navigateToCreateBillScreen = () => {
     navigation.navigate(ADD_NEW_BILL);
-  };
-
-  const buttonLayout = e => {
-    setButtonLayout(e.nativeEvent.layout.height);
   };
 
   const onItemPress = React.useCallback(i => {
@@ -389,40 +367,37 @@ const PendingBillNew = ({navigation}) => {
   //   },
   // });
 
-  const thisMonthOrAllCallback = React.useCallback(
-    type => {
-      if (type !== showVisibility) {
-        setShowVisibility(type);
-      }
-      thisOrAllModalOnPress();
-    },
-    [showVisibility],
-  );
-
-  const thisOrAllModalOnPress = type => {
-    setShowModal(type);
-  };
+  // const thisMonthOrAllCallback = React.useCallback(
+  //   type => {
+  //     if (type !== showVisibility) {
+  //       setShowVisibility(type);
+  //     }
+  //     thisOrAllModalOnPress();
+  //   },
+  //   [showVisibility],
+  // );
 
   const closeSortModal = React.useCallback(() => {
     setShowSortModal(false);
   }, []);
 
-  const selectSortingTechnique = React.useCallback((technique, type) => {
+  // React.useEffect(() => {
+  //   console.log('Visible Modal', visibleModal);
+  //   Animated.timing(RNAnimated, {
+  //     toValue: visibleModal === true ? 1 : 0,
+  //     duration: 250,
+  //     useNativeDriver: true,
+  //     easing: Easing.inOut(Easing.linear),
+  //   }).start();
+  // }, [visibleModal]);
+
+  const getSortPreferCallback = (technique, type) => {
     setSortingtype({
       technique,
       type,
     });
-  }, []);
+  };
 
-  React.useEffect(() => {
-    console.log('Visible Modal', visibleModal);
-    Animated.timing(RNAnimated, {
-      toValue: visibleModal === true ? 1 : 0,
-      duration: 250,
-      useNativeDriver: true,
-      easing: Easing.inOut(Easing.linear),
-    }).start();
-  }, [visibleModal]);
   return (
     <View style={styles.container}>
       <StatusBar
@@ -430,7 +405,12 @@ const PendingBillNew = ({navigation}) => {
         barStyle="dark-content"
       />
 
-      {showSortModal && <SortModal closeSortModal={closeSortModal} />}
+      {showSortModal && (
+        <SortModal
+          itemOnPress={getSortPreferCallback}
+          closeSortModal={closeSortModal}
+        />
+      )}
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>BillyBook</Text>
         <View
@@ -475,54 +455,15 @@ const PendingBillNew = ({navigation}) => {
         </View>
       </View>
 
-      <Tabbb
-        overdueBadge={0}
-        c={_devCount}
-        scrollX={SCROLLAnimated}
-        {...{onItemPress}}
-      />
+      <Tabbb overdueBadge={0} scrollX={SCROLLAnimated} {...{onItemPress}} />
 
-      <View
-        style={{
-          alignSelf: 'flex-end',
-          marginRight: 10,
-          marginTop: 4,
-        }}>
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => thisOrAllModalOnPress(!visibleModal)}
-          style={{
-            // marginTop: 20,
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            backgroundColor: '#fff',
-            alignSelf: 'center',
-            padding: 10,
-            borderRadius: 8,
-            // elevation: 1,
-            width: 150,
-            zIndex: -1,
-            borderWidth: 0.8,
-            borderColor: '#eee',
-          }}>
-          {/* <Text style={{fontSize: 13, color: '#fff'}}>Showing: </Text> */}
-          <Text style={{fontWeight: '700', letterSpacing: 0.9, color: '#000'}}>
-            {showVisibility}
-          </Text>
-          <Entypo name={'chevron-down'} size={20} color={'#000'} />
-        </TouchableOpacity>
-        {visibleModal && (
-          <FilteredSelection thisMonthOrAllCallback={thisMonthOrAllCallback} />
-        )}
-      </View>
       {openMenuModal && <MenuModal {...{closeMenuModal}} />}
       <ListOfBills
-        showVisibility={showVisibility}
+        {...{sortingType}}
         ref={scrollRef}
         SCROLLAnimated={SCROLLAnimated}
       />
-      <View onLayout={buttonLayout} style={[styles.createButtonWrapper]}>
+      <View style={[styles.createButtonWrapper]}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={navigateToCreateBillScreen}
@@ -559,6 +500,7 @@ const styles = StyleSheet.create({
   topNavContainer: {
     flexDirection: 'row',
     marginHorizontal: 10,
+    marginBottom: 10,
   },
   topTabText: {
     fontFamily: 'OpenSans-Regular',

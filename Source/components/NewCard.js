@@ -4,6 +4,7 @@ import {
   Dimensions,
   StyleSheet,
   Text,
+  TouchableNativeFeedback,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -66,6 +67,14 @@ class _NewCard extends React.Component {
   //   // );
   // }, [userPreferences]);
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.item.billAmount !== this.props.item.billAmount) {
+      this.setState({
+        amountRefined: this.props.item.billAmount,
+      });
+    }
+  }
+
   goToBillInDetail = () => {
     this.props.navigation.navigate(BILL_IN_DETAIL, {
       item: this.props.item,
@@ -81,14 +90,15 @@ class _NewCard extends React.Component {
   //   };
   // });
 
-  shouldComponentUpdate = nextProps => {
-    return nextProps.item !== this.props.item;
-  };
+  // shouldComponentUpdate = nextProps => {
+  //   return nextProps.item !== this.props.item;
+  // };
   render() {
     // console.log('Called New Card ...');
     const {item, overdue, isPaid} = this.props;
     return (
       <PressableButton
+        borderless={false}
         onPress={this.goToBillInDetail}
         style={[styles.container]}>
         <View>
@@ -128,6 +138,10 @@ class _NewCard extends React.Component {
           />
         </View>
         {/* 
+        {/* `
+            {/* 
+        {/* 
+            {/* 
         <View style={styles.buttonContainer}>
           <PressableButton
             rippleColor={
@@ -160,14 +174,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     backgroundColor: '#fff',
     // elevation: 1,
-    borderRadius: 8,
+    borderRadius: 2,
     paddingHorizontal: 10,
     marginVertical: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    borderWidth: 0.2,
+    borderColor: '#999',
+    zIndex: -1,
   },
   rowContainer: {
     // height: height * 0.05,

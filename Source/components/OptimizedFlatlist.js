@@ -54,9 +54,9 @@ class OptimizedFlatist extends React.Component {
     };
   }
   loadMoreBills = () => {
-    // console.log('Pressed');
-
-    // alert('pressed');
+    if (this.state.listData.length === this.props.allData.length) {
+      return;
+    }
     let returnData = returnPaginatedData(
       this.state.currentCursorForPagination,
       this.state.currentCursorForPagination + 9,
@@ -87,6 +87,13 @@ class OptimizedFlatist extends React.Component {
           currentCursorForPagination: nextProps.data.length + 1,
         });
       }
+      return true;
+    }
+    if (!this.checkIfBothArraySame(this.props.data, nextProps.data)) {
+      this.setState({
+        listData: nextProps.data,
+        currentCursorForPagination: nextProps.data.length + 1,
+      });
       return true;
     }
     return false;
