@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Animated,
   Dimensions,
   FlatList,
   StyleSheet,
@@ -7,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Easing} from 'react-native-reanimated';
 // import Animated, {
 //   Easing,
 //   interpolate,
@@ -37,21 +39,32 @@ const typeData = [
   'Vacation',
 ];
 const TypeModal = ({setType, closeModal, data = null, style: propStyle}) => {
-  // const _sharedValue = useSharedValue(0);
-  // React.useEffect(() => {
-  //   _sharedValue.value = withTiming(1, {
-  //     duration: 200,
-  //     easing: Easing.linear,
-  //   });
-  // }, []);
+  const _mount = React.useRef(new Animated.Value(0)).current;
+  React.useEffect(() => {
+    Animated.timing(_mount, {
+      toValue: 1,
+      duration: 200,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const onPress = item => {
+    setType(item);
+    Animated.timing(_mount, {
+      toValue: 0,
+      duration: 200,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }).start(() => {
+      closeModal();
+    });
+  };
   const renderType = ({item}) => {
     return (
       <TouchableOpacity
         activeOpacity={1}
-        onPress={() => {
-          setType(item);
-          closeModal();
-        }}
+        onPress={() => onPress(item)}
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
@@ -65,7 +78,8 @@ const TypeModal = ({setType, closeModal, data = null, style: propStyle}) => {
         <Text
           allowFontScaling={false}
           style={{
-            letterSpacing: 1.3,
+            // letterSpacing: 1.3,
+            fontFamily: 'OpenSans-SemiBold',
           }}>
           {item}
         </Text>
@@ -81,13 +95,28 @@ const TypeModal = ({setType, closeModal, data = null, style: propStyle}) => {
   //   };
   // });
   return (
-    <View style={[styles.container, propStyle]}>
+    <Animated.View
+      style={[
+        styles.container,
+        propStyle,
+        {
+          transform: [
+            {
+              translateY: _mount.interpolate({
+                inputRange: [0, 1],
+                outputRange: [height, 0],
+                extrapolate: 'clamp',
+              }),
+            },
+          ],
+        },
+      ]}>
       <FlatList
         data={data === null ? typeData : data}
         renderItem={renderType}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(_, index) => index.toString()}
       />
-    </View>
+    </Animated.View>
   );
 };
 
@@ -100,11 +129,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     left: 20,
     right: 20,
-    // alignSelf: 'center',
-    // alignSelf: 'center',
-    // bottom: 40,
-    // top: 40,
-    // height: 150,
+    // flex: 1,
   },
 });
 export default TypeModal;

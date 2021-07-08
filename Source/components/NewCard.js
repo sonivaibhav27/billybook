@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  Alert,
   Animated,
   Dimensions,
   StyleSheet,
@@ -16,6 +17,8 @@ import {AppProvider} from './Provider';
 import PressableButton from './PressableButton';
 import {Colors} from './Color';
 import {Easing} from 'react-native-reanimated';
+import {deleteBill} from '../databases/realm.helper';
+import BillSchema from '../DB/NewSch';
 // import Animated, {
 //   Easing,
 //   interpolate,
@@ -25,20 +28,22 @@ import {Easing} from 'react-native-reanimated';
 // } from 'react-native-reanimated';
 const {width, height} = Dimensions.get('window');
 
-const RowItem = React.memo(({label, itemText, style, ...rest}) => {
-  return (
-    <View style={[styles.rowContainer, style]}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text
-        lineBreakMode="tail"
-        numberOfLines={1}
-        {...rest}
-        style={styles.rowText}>
-        {itemText}
-      </Text>
-    </View>
-  );
-});
+const RowItem = React.memo(
+  ({label, itemText, style, multiline = 1, ...rest}) => {
+    return (
+      <View style={[styles.rowContainer, style]}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <Text
+          lineBreakMode="tail"
+          numberOfLines={multiline}
+          {...rest}
+          style={styles.rowText}>
+          {itemText}
+        </Text>
+      </View>
+    );
+  },
+);
 
 class _NewCard extends React.Component {
   // const navigation = useNavigation();
@@ -93,19 +98,35 @@ class _NewCard extends React.Component {
   // shouldComponentUpdate = nextProps => {
   //   return nextProps.item !== this.props.item;
   // };
+
+  delete = () => {
+    Alert.alert('Delete', `want to delete bill ${this.props.item.billName}`, [
+      {
+        text: 'cancel',
+      },
+      {
+        text: 'Delete',
+        onPress: () => deleteBill(this.props.item, BillSchema),
+      },
+    ]);
+  };
   render() {
     // console.log('Called New Card ...');
     const {item, overdue, isPaid} = this.props;
     return (
       <PressableButton
+        onLongPress={this.delete}
         borderless={false}
         onPress={this.goToBillInDetail}
         style={[styles.container]}>
-        <View>
+        <View style={{width: width * 0.5 - 20}}>
           <RowItem
             label="Bill Name"
-            itemText={item.billName}
-            style={{width: width * 0.5, paddingRight: 5}}
+            itemText={
+              item.billName +
+              ' asdasdshdjshdjhsjdhdjhjshdjhhfdhfjdhfjhdjfhfhdjhj'
+            }
+            style={{paddingRight: 5}}
           />
           <RowItem
             label={isPaid ? 'Paid On' : 'Due Date'}
@@ -119,52 +140,48 @@ class _NewCard extends React.Component {
         </View>
 
         <View
-          style={
-            {
-              // flexDirection: 'row',
-              // marginTop: 15,
-            }
-          }>
-          <RowItem
-            label="Bill Category"
-            itemText={item.type}
-            // style={{width: width * 0.5, backgroundColor: 'red'}}
-          />
-          <RowItem
-            label="Amount"
-            itemText={this.state.amountRefined}
-            numberOfLines={2}
-            style={{marginTop: 10, maxWidth: 100}}
-          />
+          style={{
+            flexDirection: 'row',
+            width: width * 0.5 - 20,
+            flex: 1,
+            justifyContent: 'space-between',
+          }}>
+          <View style={{flex: 1}}>
+            <RowItem
+              label="Bill Category"
+              itemText={'Education eshdjhsjddsjjsdjksdksjdksjdksjdkj'}
+            />
+            <RowItem
+              label="Amount"
+              itemText={this.state.amountRefined}
+              // numberOfLines={2}
+              style={{marginTop: 10}}
+            />
+          </View>
+          <View style={styles.buttonContainer}>
+            <PressableButton
+              // rippleColor={
+              //   isPaid
+              //     ? 'rgba(0, 171, 102, 0.8)'
+              //     : overdue
+              //     ? '#EA5A72'
+              //     : '#2771C5'
+              // }
+              onPress={this.goToBillInDetail}
+              style={[
+                styles.button,
+                {
+                  backgroundColor: isPaid
+                    ? 'rgba(0, 171, 102, 0.8)'
+                    : overdue
+                    ? '#EA5A72'
+                    : '#2771C5',
+                },
+              ]}>
+              <AntDesign color="#fff" size={20} name="arrowright" />
+            </PressableButton>
+          </View>
         </View>
-        {/* 
-        {/* `
-            {/* 
-        {/* 
-            {/* 
-        <View style={styles.buttonContainer}>
-          <PressableButton
-            rippleColor={
-              isPaid
-                ? 'rgba(0, 171, 102, 0.8)'
-                : overdue
-                ? '#EA5A72'
-                : '#2771C5'
-            }
-            onPress={this.goToBillInDetail}
-            style={[
-              styles.button,
-              {
-                backgroundColor: isPaid
-                  ? 'rgba(0, 171, 102, 0.8)'
-                  : overdue
-                  ? '#EA5A72'
-                  : '#2771C5',
-              },
-            ]}>
-            <AntDesign color="#fff" size={20} name="arrowright" />
-          </PressableButton>
-        </View> */}
       </PressableButton>
     );
   }
@@ -173,34 +190,34 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 10,
     backgroundColor: '#fff',
-    // elevation: 1,
     borderRadius: 2,
     paddingHorizontal: 10,
     marginVertical: 5,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    // justifyContent: 'space-between',
     paddingVertical: 4,
     borderWidth: 0.2,
     borderColor: '#999',
     zIndex: -1,
+    flex: 1,
   },
   rowContainer: {
     // height: height * 0.05,
   },
   rowLabel: {
     fontSize: 12,
-    fontWeight: '100',
-    color: '#707070',
+    // fontWeight: '100',
+    color: '#888',
+    fontFamily: 'OpenSans-Light',
   },
   rowText: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#121212',
   },
   buttonContainer: {
-    // position: 'absolute',
-    // right: 0,
-    // bottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // backgroundColor: 'red',
   },
   button: {
     backgroundColor: '#2771C5',

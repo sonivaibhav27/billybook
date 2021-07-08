@@ -1,15 +1,23 @@
 import React from 'react';
-import {Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  Text,
+  TouchableNativeFeedback,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 
 export default ({text, textColor, backgroundColor, onPress, ...rest}) => {
   console.log(rest);
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={onPress}
-      style={[styles.container, {backgroundColor, ...rest.style}]}>
-      <Text style={[styles.text, {color: textColor}]}>{text}</Text>
-    </TouchableOpacity>
+    <View
+      style={{flex: 1, overflow: 'hidden', borderRadius: 40, marginRight: 5}}>
+      <TouchableNativeFeedback onPress={onPress}>
+        <View style={[styles.container, {backgroundColor, ...rest.style}]}>
+          <Text style={[styles.text, {color: textColor}]}>{text}</Text>
+        </View>
+      </TouchableNativeFeedback>
+    </View>
   );
 };
 
@@ -19,11 +27,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     borderRadius: 4,
-    paddingVertical: 12,
-    alignSelf: 'center',
+    // alignSelf: 'center',
   },
   text: {
     fontSize: 20,
-    fontFamily: 'SourceSansPro-Bold',
+    fontFamily: 'OpenSans-Bold',
   },
 });

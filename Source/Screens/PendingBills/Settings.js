@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#222',
+    fontFamily: 'OpenSans-Regular',
   },
   androidVersionText: {
     textAlign: 'center',

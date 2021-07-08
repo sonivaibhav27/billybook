@@ -29,12 +29,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontFamily: 'Raleway-Bold',
-    letterSpacing: 1.05,
+    fontFamily: 'OpenSans-SemiBold',
     fontSize: 20,
     textTransform: 'uppercase',
     color: '#303030',
-    top: -2.5,
   },
 });
 export default Header;

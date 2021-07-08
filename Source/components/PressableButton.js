@@ -7,8 +7,10 @@ const PressableButton = ({
   style,
   rippleColor = '#eee',
   borderless = true,
+  onLongPress = null,
 }) => (
   <Pressable
+    onLongPress={onLongPress}
     style={style}
     onPress={onPress}
     android_ripple={{

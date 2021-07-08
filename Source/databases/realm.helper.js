@@ -101,3 +101,28 @@ export const returnPaginatedData = (startFrom, end, data: Array) => {
   // });
   return data.slice(startFrom, end + 1);
 };
+
+export const payBillHelper = (item, schema, date, amount) => {
+  if (item.amount < amount) return;
+  schema.write(() => {
+    item = {
+      billName: item.billName,
+      billAmount: item.billAmount,
+      isPaid: item.billAmount - amount === 0,
+      type: item.type,
+      paidDates: [
+        ...item.paidDates,
+        {
+          amount,
+          date: Number(moment(date).format('YYYYMMDD')),
+        },
+      ],
+    };
+  });
+};
+
+export const deleteBill = (item, BillSchema) => {
+  BillSchema.write(() => {
+    BillSchema.delete(item);
+  });
+};

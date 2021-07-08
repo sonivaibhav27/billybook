@@ -1,1 +1,1 @@
-export {default as TopTabBar_Pend_Paid} from './HomeTopTab';
+export {default as TopTabBar_Pend_Paid} from './PendingScreenStack';

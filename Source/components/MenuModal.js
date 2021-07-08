@@ -2,7 +2,11 @@ import {useNavigation} from '@react-navigation/core';
 import React from 'react';
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Easing} from 'react-native-reanimated';
-import {NEW_PAID_SCREEN, SETTINGS_SCREEN} from './navigationTypes';
+import {
+  GENERATE_REPORT_SCREEN,
+  NEW_PAID_SCREEN,
+  SETTINGS_SCREEN,
+} from './navigationTypes';
 import PressableButton from './PressableButton';
 
 const Item = ({item}) => {
@@ -18,6 +22,11 @@ const MenuModal = ({closeMenuModal}) => {
   const navigateToPaidBillScreen = () => {
     closeMenuModal();
     navigation.navigate(NEW_PAID_SCREEN);
+  };
+
+  const navigateToReportScreen = () => {
+    closeMenuModal();
+    navigation.navigate(GENERATE_REPORT_SCREEN);
   };
   React.useEffect(() => {
     Animated.timing(_mount, {
@@ -66,7 +75,9 @@ const MenuModal = ({closeMenuModal}) => {
       <PressableButton borderless={false} onPress={navigateToPaidBillScreen}>
         <Item item="Paid Bills" />
       </PressableButton>
-      <Item item="Reports" />
+      <PressableButton borderless={false} onPress={navigateToReportScreen}>
+        <Item item="Reports" />
+      </PressableButton>
       <PressableButton borderless={false} onPress={navigateToSettingsScreen}>
         <Item item="Setting" />
       </PressableButton>

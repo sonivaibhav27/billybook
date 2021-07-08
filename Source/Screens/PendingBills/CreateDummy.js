@@ -342,10 +342,6 @@ export default () => {
           backgroundColor={Colors.primary}
           textColor={'#fff'}
           text="Create Bill"
-          style={{
-            // marginHorizontal: 10,
-            width: 200,
-          }}
         />
       </View>
       {openModal && (
@@ -354,6 +350,10 @@ export default () => {
             setOpenModal(false);
           }}
           setType={setType}
+          style={{
+            top: 20,
+            bottom: 20,
+          }}
         />
       )}
       {startCreatingBills && (
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btnContainer: {
-    backgroundColor: '#fff',
-    paddingVertical: 5,
+    backgroundColor: 'blue',
+    paddingVertical: 5 ,
     elevation: 2,
     // marginVertical: 10,
   },

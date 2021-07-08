@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     // fontFamily: 'Raleway-Bold',
     color: '#000',
     fontFamily: 'OpenSans-SemiBold',
-    fontSize: 18,
+    fontSize: 16,
   },
 
   labelText: {

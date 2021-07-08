@@ -11,6 +11,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Platform,
 } from 'react-native';
 import {Colors} from '../../components/Color';
 import {FontAwesome, AntDesign, Ionicons, Entypo} from '../../components/Icons';
@@ -28,6 +29,7 @@ import {
   sortByDate,
   sortThisMonthBillByDate,
 } from '../../databases/realm.helper';
+
 import PressableButton from '../../components/PressableButton';
 import FilteredSelection from '../../components/FilteredSelection';
 import OptimizedFlatlist from '../../components/OptimizedFlatlist';
@@ -41,7 +43,7 @@ const topNavs = [
   {name: 'Overdue Bills', bgColors: Colors.tomato, ref: React.createRef()},
 ];
 
-const IndicatorLine = ({scrollX, measures}) => {
+const IndicatorLine = React.memo(({scrollX, measures}) => {
   console.log(measures);
   // const line = useAnimatedStyle(() => {
   //   return {
@@ -92,7 +94,7 @@ const IndicatorLine = ({scrollX, measures}) => {
       <View style={[styles.indicator]} />
     </Animated.View>
   );
-};
+});
 
 const Tab = React.forwardRef(
   ({name, onItemPress, index, overdueBadge, scrollX}, ref) => {
@@ -115,7 +117,7 @@ const Tab = React.forwardRef(
   },
 );
 
-const Tabbb = ({scrollX, onItemPress, c, overdueBadge}) => {
+const Tabbb = React.memo(({scrollX, onItemPress, c, overdueBadge}) => {
   const containerRef = React.useRef();
   const [measures, setMeasure] = React.useState([]);
 
@@ -153,12 +155,13 @@ const Tabbb = ({scrollX, onItemPress, c, overdueBadge}) => {
       )}
     </View>
   );
-};
+});
 
 const ListOfBills = React.memo(
   forwardRef(({sortingType, SCROLLAnimated}, scrollRef) => {
     const navigation = useNavigation();
     const [_lastStateScreenIndex, _setLastStateScreenIndex] = React.useState(0);
+    const _timeout = React.useRef().current;
     const [data, setData] = React.useState([]);
     const [overdueBills, setOverDueBills] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
@@ -178,6 +181,7 @@ const ListOfBills = React.memo(
       setOverDueBills(paginated);
       setLoading(false);
       // setAllOverdueData(d);
+      return () => clearTimeout(_timeout);
     }, [sortingType.technique, sortingType.type]);
 
     // React.useEffect(() => {
@@ -221,6 +225,18 @@ const ListOfBills = React.memo(
         const paginated = returnPaginatedData(0, 10, a);
         setAllData(a);
         setData(paginated);
+      } else if (changes.deletions.length != 0) {
+        // setLoading(true);
+        let newData = allData.filter(item => {
+          return (
+            item.billName != bill[0].billName &&
+            item.due != bill[0].due &&
+            item.billAmount != bill[0].billAmount
+          );
+        });
+        setAllData(newData);
+        const nwPaginated = returnPaginatedData(0, 10, newData);
+        setData(nwPaginated);
       }
     };
     const SIDE_MARGIN = 20;
@@ -503,7 +519,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   topTabText: {
-    fontFamily: 'OpenSans-Regular',
+    fontFamily: 'OpenSans-SemiBold',
     marginHorizontal: 10,
     fontSize: 13,
   },

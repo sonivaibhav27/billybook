@@ -9,3 +9,4 @@ export const BILL_IN_DETAIL = 'BillInDetail';
 export const NEW_PAID_SCREEN = 'NewPaidScreen';
 export const SEARCH_SCREEN = 'SearchScreen';
 export const SETTINGS_SCREEN = 'Setting_Screen';
+export const GENERATE_REPORT_SCREEN = 'GenerateReportScreen';

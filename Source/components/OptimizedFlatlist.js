@@ -109,6 +109,7 @@ class OptimizedFlatist extends React.Component {
   keyExtractor = (_, index) => {
     return `${index}`;
   };
+  removeItem = item => {};
   render() {
     const {listData, currentCursorForPagination} = this.state;
     console.log('w', this.state.listData.length);

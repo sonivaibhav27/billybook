@@ -12,6 +12,7 @@ export const Colors = {
   // backgroundColor: '#fff',
   backgroundColor: '#FBFBFB',
   textColor: '#181D2D',
+  lightPrimary: 'rgba(49, 103, 174, 0.2)',
 };
 
 export const Fonts = {};

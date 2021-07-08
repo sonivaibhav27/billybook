@@ -3,49 +3,106 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   UIManager,
   View,
+  TouchableNativeFeedback,
+  Animated,
 } from 'react-native';
 import moment from 'moment';
 import {Colors} from '../../components/Color';
 import Header from '../../components/Header';
-import {Entypo} from '../../components/Icons';
+import {AntDesign, Entypo} from '../../components/Icons';
 import PaymentDate from '../../components/PaymentDate';
 import {updateIsPaid} from '../../databases/helper';
 import Loading from '../../components/Loading';
+import PreviousPaymentHistory from '../../components/PreviousPaymentHistory';
+import {Easing} from 'react-native-reanimated';
+import Button from '../../components/Button';
+import ParticularBillClass from './ItemClass';
+import {ParticularBillScreen} from '..';
 UIManager.setLayoutAnimationEnabledExperimental(true);
+
+const getFormateDate = momentObject => {
+  return momentObject.format('MMMM D,YYYY');
+};
+const today = new Date(Date.now());
 const BillInDetail = ({
   route: {
     params: {item, over, callFromPaid},
   },
-  navigation,
 }) => {
-  const [selectedDetail, setSelectedDetail] = React.useState('Today');
-  const [dateOpen, setDateOpen] = React.useState(false);
-  const [paidInFull, setPaidInFull] = React.useState(false);
-  // const [userPaid, setUserPaid] = React.useState(false);
+  const [selected, setSelected] = React.useState('Today');
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [date, setDate] = React.useState(getFormateDate(moment(today)));
+  const [amount, setAmount] = React.useState('');
+  const [showPreviousHistory, setShowPreviousHistory] = React.useState(false);
   const [showDone, setShowDone] = React.useState(false);
 
-  // console.log('Paidon=>', item.halfPaidDates);
-  console.log('item=> ', item.bill_id);
-
-  React.useEffect(() => {
-    const get = async () => {
-      const a = await item.getPaidDates;
-      a.map(item => {
-        console.log('A =>', item.intervalAmount);
-      });
-    };
-    get();
+  const toggleShowPayHistory = () => {
+    setShowPreviousHistory(a => !a);
+  };
+  const selectDate = React.useCallback(select => {
+    if (select == 'Select Date') {
+      setIsOpen(true);
+    } else if (select == 'Yesterday') {
+      setDate(moment(today).subtract(1, 'days').format('MMMM D, YYYY'));
+    } else {
+      setDate(moment(today).format('MMM D, YYYY'));
+    }
+    setSelected(select);
   }, []);
+
+  const onModalDateSelection = React.useCallback((e, s) => {
+    const a = s || today;
+    setIsOpen(false);
+    setDate(moment(a).format('MMMM D, YYYY'));
+  }, []);
+
+  const payFullAmount = React.useCallback(() => {
+    setAmount('');
+  }, []);
+
+  const partlyPaidFunction = e => {
+    if (Number(e) <= item.billAmount) {
+      setAmount(e);
+      // setAmountExceedError(false);
+    } else {
+      setAmount('');
+      // setAmountExceedError(true);
+
+      ToastAndroid.showWithGravityAndOffset(
+        'Amount should be less than bill amount ' + item.billAmount,
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+        0,
+        20,
+      );
+    }
+  };
+
+  const onMarkPaidPress = () => {
+    const data = JSON.stringify({
+      amount: amount === '' ? item.billAmount : amount,
+      name: item.billName,
+      date: date,
+    });
+    alert(data);
+  };
+
+  const closeModal = React.useCallback(() => {
+    setShowPreviousHistory(false);
+  }, []);
+
+  const bill = new ParticularBillClass(item);
   return (
     <View style={[styles.container]}>
       <Header headerText="payment detail " isBackable />
       <ScrollView
         style={{
           flex: 1,
-          marginBottom: 75,
+          // marginBottom: 75,
         }}
         contentContainerStyle={{}}>
         <View
@@ -82,12 +139,12 @@ const BillInDetail = ({
             <View>
               <Text style={styles.labelText}>Bill Name</Text>
               <Text mul style={styles.actualTextStyle}>
-                {item.billName}
+                {bill.billName}
               </Text>
             </View>
             <View style={{marginRight: 10}}>
               <Text style={[styles.labelText, {}]}>Type/Categories</Text>
-              <Text style={styles.actualTextStyle}> {item.type}</Text>
+              <Text style={styles.actualTextStyle}> {bill.type}</Text>
             </View>
           </View>
           <View
@@ -101,15 +158,11 @@ const BillInDetail = ({
               <Text style={styles.labelText}>Due on</Text>
               <Text style={styles.actualTextStyle}>
                 {' '}
-                {moment(item.due).format('MMM D, YYYY')}
+                {moment(bill.due, 'YYYYMMDD').format('MMM D, YYYY')}
               </Text>
             </View>
             <View
               style={{
-                backgroundColor:
-                  item.paidOn !== null
-                    ? 'lightgreen'
-                    : 'rgba(243, 83, 105, 0.25)',
                 paddingHorizontal: 15,
                 marginTop: 10,
                 justifyContent: 'center',
@@ -120,10 +173,10 @@ const BillInDetail = ({
                 // elevation: 0.3,
               }}>
               <Text style={[styles.labelText]}>Bill Amount</Text>
-              <Text style={styles.actualTextStyle}>₹ {item.billAmount}</Text>
+              <Text style={styles.actualTextStyle}>₹ {bill.billAmount}</Text>
             </View>
           </View>
-          {item.remark != null && (
+          {bill.remark != null && (
             <View
               style={{
                 borderWidth: 0.5,
@@ -132,94 +185,82 @@ const BillInDetail = ({
               }}
             />
           )}
-          {item.remark != null && (
+          {bill.remark != null && (
             <View style={{marginTop: 10}}>
               <Text
                 style={{
                   fontStyle: 'italic',
                   fontSize: 13,
                 }}>
-                Remark:<Text> {item.remark}</Text>
+                Remark:<Text> {bill.remark}</Text>
               </Text>
             </View>
           )}
         </View>
-        {!callFromPaid && item.paidOn === null && (
-          <PaymentDate totalAmount={item.billAmount} />
-        )}
-        {(item.paidOn !== null || callFromPaid) && (
-          <View
-            style={{
-              marginTop: 20,
-              marginHorizontal: 20,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              padding: 10,
-              backgroundColor: 'rgba(0, 171, 102, 0.8)',
-              borderRadius: 8,
-              paddingHorizontal: 13,
-              paddingVertical: 15,
-            }}>
-            <View>
-              <Text style={[styles.labelText, {color: 'white'}]}>Paid on</Text>
-              <Text style={[styles.actualTextStyle, {color: 'white'}]}>
-                {moment(item.paidOn).format('DD/MM/YYYY')}
-              </Text>
-            </View>
-            <View>
-              <Text style={[styles.labelText, {color: 'white'}]}>
-                Paid Amount
-              </Text>
-              <Text style={[styles.actualTextStyle, {color: 'white'}]}>
-                ₹ 500
-              </Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-      {!showDone && item.paidOn === null && !callFromPaid && (
         <View
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
+            marginHorizontal: 20,
+            backgroundColor: '#eee',
             padding: 10,
-            backgroundColor: '#fff',
-            elevation: 5,
-            height: 70,
-            zIndex: -3,
+            borderRadius: 50,
+            // overflow: 'hidden',
           }}>
-          <TouchableOpacity
-            onPress={() => {
-              // updateIsPaid(item);
-              setShowDone(true);
-              updateIsPaid(item, () => {});
-            }}
-            style={{
-              backgroundColor: Colors.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              alignSelf: 'center',
-              borderRadius: 50,
-              paddingVertical: 10,
-              paddingHorizontal: 15,
-              width: 200,
-              flexDirection: 'row',
-            }}>
-            <Entypo name="check" size={20} color="white" />
+          <TouchableNativeFeedback
+            style={{flex: 1}}
+            // background={TouchableNativeFeedback.Ripple('#000', true)}
+            onPress={toggleShowPayHistory}>
             <Text
               style={{
-                fontSize: 20,
-                color: '#fff',
-                fontFamily: 'Raleway-SemiBold',
-                top: -2.5,
-                marginLeft: 10,
+                fontFamily: 'OpenSans-Bold',
+                color: '#333',
+                textAlign: 'center',
               }}>
-              Mark as Paid
+              {showPreviousHistory ? 'Hide' : 'Show'} earlier payments{' '}
+              <Entypo name="chevron-right" />
             </Text>
-          </TouchableOpacity>
+          </TouchableNativeFeedback>
         </View>
+
+        {!callFromPaid && bill.isPaid === false && (
+          <PaymentDate
+            selectedDate={selected}
+            onDateSelection={selectDate}
+            userSelectedDate={date}
+            totalAmount={item.billAmount}
+            openDateModal={isOpen}
+            onModalDateSelection={onModalDateSelection}
+            payFullAmount={payFullAmount}
+            amount={amount}
+            partlyPaidFunction={partlyPaidFunction}
+          />
+        )}
+      </ScrollView>
+
+      {!showDone && bill.isPaid === false && !callFromPaid && (
+        <View
+          style={{
+            padding: 10,
+            backgroundColor: '#eee',
+            elevation: 0,
+            zIndex: -300,
+            flexDirection: 'row',
+          }}>
+          <Button
+            backgroundColor={Colors.lightTomato}
+            textColor={Colors.tomato}
+            text="Delete"
+            style={{borderRadius: 40, maxWidth: 200}}
+          />
+          <Button
+            backgroundColor={Colors.primary}
+            textColor={'#fff'}
+            text="Mark as Paid"
+            style={{borderRadius: 40, flex: 1, maxWidth: 200}}
+          />
+        </View>
+      )}
+      {item.isPaid === false && showPreviousHistory && (
+        <PreviousPaymentHistory closeModal={closeModal} />
       )}
       {showDone && (
         <Loading
@@ -235,18 +276,19 @@ const BillInDetail = ({
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: Colors.backgroundColor},
   labelText: {
-    fontSize: 14,
-    color: '#555',
-    fontFamily: 'Raleway-Regular',
+    fontSize: 12,
+    color: '#777',
+    // fontFamily: 'Raleway-Regular',
   },
   actualTextStyle: {
     fontSize: 18,
     maxWidth: 150,
     marginLeft: 2,
-    fontFamily: 'Raleway-SemiBold',
+    // fontFamily: 'Raleway-SemiBold',
     // fontWeight: '700',
     letterSpacing: 0.3,
-    color: '#222',
+    color: '#111',
+    fontWeight: '900',
     // textAlign: 'center',
   },
   extraDataContainer: {
