@@ -1,33 +1,23 @@
 import * as React from 'react';
 import {
   Alert,
-  Animated,
   Dimensions,
+  NativeModules,
   StyleSheet,
   Text,
-  TouchableNativeFeedback,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import moment from 'moment';
 import {AntDesign} from './Icons';
 import {useNavigation} from '@react-navigation/core';
 import {BILL_IN_DETAIL} from './navigationTypes';
-import {AppProvider} from './Provider';
 import PressableButton from './PressableButton';
-import {Colors} from './Color';
-import {Easing} from 'react-native-reanimated';
 import {deleteBill} from '../databases/realm.helper';
 import BillSchema from '../DB/NewSch';
-// import Animated, {
-//   Easing,
-//   interpolate,
-//   useAnimatedStyle,
-//   useSharedValue,
-//   withTiming,
-// } from 'react-native-reanimated';
-const {width, height} = Dimensions.get('window');
 
+const {width} = Dimensions.get('window');
+
+const nativeModule = NativeModules.MoneyFormat;
 const RowItem = React.memo(
   ({label, itemText, style, multiline = 1, ...rest}) => {
     return (
@@ -45,7 +35,7 @@ const RowItem = React.memo(
   },
 );
 
-class _NewCard extends React.Component {
+class _NewCard extends React.PureComponent {
   // const navigation = useNavigation();
   constructor(props) {
     super(props);
@@ -54,13 +44,11 @@ class _NewCard extends React.Component {
     };
   }
 
-  // const userPreferences = React.useContext(AppProvider);
-  // const _mountAnimation = useSharedValue(0);
-
-  // _mountAnimation.value = withTiming(1, {
-  //   duration: 300,
-  //   easing: Easing.inOut(Easing.ease),
-  // });
+  componentDidMount() {
+    nativeModule.getCurrency(this.state.amountRefined, 'EUR', amount => {
+      this.setState({amountRefined: amount});
+    });
+  }
   // React.useEffect(() => {
   //   // nativeModule.getCurrency(item.billAmount, 'EUR', amount => {
   //   //   setAmountRefined(amount);
@@ -87,18 +75,6 @@ class _NewCard extends React.Component {
     });
   };
 
-  // const style = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [
-  //       {scale: interpolate(_mountAnimation.value, [0, 1], [0.8, 1])},
-  //     ],
-  //   };
-  // });
-
-  // shouldComponentUpdate = nextProps => {
-  //   return nextProps.item !== this.props.item;
-  // };
-
   delete = () => {
     Alert.alert('Delete', `want to delete bill ${this.props.item.billName}`, [
       {
@@ -122,10 +98,7 @@ class _NewCard extends React.Component {
         <View style={{width: width * 0.5 - 20}}>
           <RowItem
             label="Bill Name"
-            itemText={
-              item.billName +
-              ' asdasdshdjshdjhsjdhdjhjshdjhhfdhfjdhfjhdjfhfhdjhj'
-            }
+            itemText={item.billName}
             style={{paddingRight: 5}}
           />
           <RowItem
@@ -147,10 +120,7 @@ class _NewCard extends React.Component {
             justifyContent: 'space-between',
           }}>
           <View style={{flex: 1}}>
-            <RowItem
-              label="Bill Category"
-              itemText={'Education eshdjhsjddsjjsdjksdksjdksjdksjdkj'}
-            />
+            <RowItem label="Bill Category" itemText={item.type} />
             <RowItem
               label="Amount"
               itemText={this.state.amountRefined}
@@ -175,6 +145,8 @@ class _NewCard extends React.Component {
                     ? 'rgba(0, 171, 102, 0.8)'
                     : overdue
                     ? '#EA5A72'
+                    : item.paidDates.length != 0
+                    ? '#ffb101'
                     : '#2771C5',
                 },
               ]}>
@@ -235,3 +207,4 @@ const NewCard = props => {
 };
 
 export default React.memo(NewCard);
+// export default NewCard;

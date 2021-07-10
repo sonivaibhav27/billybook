@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
@@ -42,8 +43,9 @@ export default () => {
   const [startCreatingBills, setStartCreatingBills] = React.useState(false);
   const [isCheckBoxChecked, setIsCheckBoxChecked] = React.useState(false);
   const [selectedRepeat, setSelectedRepeat] = React.useState('days');
-
   const [openModal, setOpenModal] = React.useState(false);
+  const [frequencyForHowManyTimes, setFrequencyForHowManyTimes] =
+    React.useState('');
   // const _keyBoardSharedValue = useSharedValue(0);
 
   React.useEffect(() => {
@@ -83,10 +85,20 @@ export default () => {
 
   const createBill = () => {
     console.log(billAmount, billName, billType, billDue);
-    setStartCreatingBills(true);
 
     // saveToDatabase(billName, Number(billAmount), billDue, billRemark, billType);
     // this.setState({showAnimation: false});
+    if (!billAmount || !billName || !billType || !billDue) {
+      ToastAndroid.showWithGravityAndOffset(
+        'Please fill the required field',
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM,
+        0,
+        100,
+      );
+      return;
+    }
+    setStartCreatingBills(true);
     createBillInDatabase(
       billName,
       billAmount,
@@ -98,12 +110,6 @@ export default () => {
     ).then(() => {
       setStartCreatingBills(false);
       alert('Done');
-    });
-  };
-
-  const onEndEditing = () => {
-    nativeModule.getCurrency(Number(billAmount), 'INR', number => {
-      setBillAmount(number);
     });
   };
 
@@ -256,6 +262,7 @@ export default () => {
                       textAlign: 'center',
                       borderBottomWidth: 1,
                     }}
+                    defaultValue="1"
                     maxLength={3}
                   />
                 </View>
@@ -297,6 +304,29 @@ export default () => {
                 {/* <Text>Hello</Text> */}
                 <Text>For</Text>
                 <TextInput
+                  value={frequencyForHowManyTimes}
+                  onChangeText={e => {
+                    if (e.length == 1 && Number(e) >= 2) {
+                      ToastAndroid.showWithGravityAndOffset(
+                        'Number should betweeen 1 and 12',
+                        ToastAndroid.SHORT,
+                        ToastAndroid.BOTTOM,
+                        0,
+                        20,
+                      );
+                    } else if (Number(e) >= 12) {
+                      ToastAndroid.showWithGravityAndOffset(
+                        'Number should betweeen 1 and 12',
+                        ToastAndroid.SHORT,
+                        ToastAndroid.BOTTOM,
+                        0,
+                        20,
+                      );
+                      setFrequencyForHowManyTimes('');
+                    } else {
+                      setFrequencyForHowManyTimes(e);
+                    }
+                  }}
                   textAlignVertical="top"
                   keyboardType="number-pad"
                   style={{
@@ -307,7 +337,7 @@ export default () => {
                     borderBottomWidth: 1,
                   }}
                   defaultValue={'1'}
-                  maxLength={3}
+                  maxLength={2}
                 />
                 <Text style={{marginLeft: 10, textTransform: 'capitalize'}}>
                   {selectedRepeat}
@@ -342,6 +372,7 @@ export default () => {
           backgroundColor={Colors.primary}
           textColor={'#fff'}
           text="Create Bill"
+          containerStyle={{width: 250, alignSelf: 'center'}}
         />
       </View>
       {openModal && (
@@ -372,10 +403,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   btnContainer: {
-    backgroundColor: 'blue',
-    paddingVertical: 5 ,
+    paddingVertical: 5,
     elevation: 2,
-    // marginVertical: 10,
+    backgroundColor: '#fff',
   },
   checkBoxContainer: {
     marginHorizontal: 20,

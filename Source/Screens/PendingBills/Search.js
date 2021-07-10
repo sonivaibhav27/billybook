@@ -1,20 +1,11 @@
 import React from 'react';
-import {
-  Dimensions,
-  FlatList,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
 import moment from 'moment';
-// import Animated, {Easing} from 'react-native-reanimated';
 import {AntDesign} from '../../components/Icons';
 import {Colors} from '../../components/Color';
 import NewCard from '../../components/NewCard';
 import {
-  getAllBillForSearch,
+  getAllDataFromRealm,
   returnPaginatedData,
   sortByDate,
 } from '../../databases/realm.helper';
@@ -23,7 +14,6 @@ import PressableButton from '../../components/PressableButton';
 import OptimizedFlatlist from '../../components/OptimizedFlatlist';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
-const {width} = Dimensions.get('window');
 const Search = ({data, allData}) => {
   React.useEffect(() => {}, []);
   const todayDate = Number(moment().format('YYYYMMDD'));
@@ -31,7 +21,7 @@ const Search = ({data, allData}) => {
     return <NewCard item={item} overdue={item.due < todayDate} />;
   };
   return (
-    <View style={{flex: 1, zIndex: -1000}}>
+    <View style={{flex: 1, zIndex: -10, alignItems: 'center'}}>
       <OptimizedFlatlist
         style={{flex: 1}}
         allData={allData}
@@ -45,7 +35,6 @@ const Search = ({data, allData}) => {
 const SearchBillScreen = ({navigation}) => {
   const [data, setData] = React.useState([]);
   const [allData, setAllData] = React.useState([]);
-  const [entireData, setEntireData] = React.useState([]);
   const [searchText, setSearchText] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   React.useEffect(() => {
@@ -60,18 +49,22 @@ const SearchBillScreen = ({navigation}) => {
     const paginatedData = returnPaginatedData(0, 10, data);
     console.log('Data', data);
     setAllData(data);
-    setEntireData(data);
     setData(paginatedData);
     setLoading(false);
   };
+
   const changeText = async e => {
     setSearchText(e);
-    const d = entireData.filter(bill => {
-      return bill.billName.includes(e);
-    });
-    setAllData(d);
-    const paginatedData = returnPaginatedData(0, 10, d);
+    const trimmedUserData = e.trim();
+    setLoading(true);
+    const data = getAllDataFromRealm(BillSchema).filtered(
+      'billName CONTAINS[c] $0',
+      trimmedUserData,
+    );
+    setAllData(data);
+    const paginatedData = returnPaginatedData(0, 10, data);
     setData(paginatedData);
+    setLoading(false);
   };
   if (loading) {
     return <LoadingIndicator title="Loading Bills..." />;
@@ -91,8 +84,20 @@ const SearchBillScreen = ({navigation}) => {
           onChangeText={changeText}
         />
       </View>
-      {data.length != 0 && (
-        <Search allData={allData} data={data} searchText={searchText} />
+      {allData.length != 0 ? (
+        <Search
+          emptyList={allData.length == 0}
+          allData={allData}
+          data={data}
+          searchText={searchText}
+        />
+      ) : (
+        <View style={styles.centerContent}>
+          <Text style={styles.emptyBillText}>
+            No Bills Found for -{' '}
+            <Text style={{fontWeight: '700', fontSize: 18}}>{searchText}</Text>
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -122,6 +127,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: '#222',
     // zIndex: 1000,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  emptyBillText: {
+    fontSize: 16,
+    color: '#333',
+    fontFamily: 'OpenSans-SemiBold',
+    textAlign: 'center',
   },
 });
 export default SearchBillScreen;

@@ -15,7 +15,7 @@ export const sortByDate = (billInstance, sortDescending, on = 'due') => {
   const todayDate = getTodayDate();
   const endOfYear = Number(moment().add(1, 'y').format('YYYYMMDD'));
   return getAllDataFromRealm(billInstance)
-    .filtered('due >= $0 && due <= $1', todayDate, endOfYear)
+    .filtered('due >= $0 && due <= $1 && isPaid == false', todayDate, endOfYear)
     .sorted(on, sortDescending);
 };
 
@@ -79,6 +79,10 @@ export const createBillInDatabase = (
   });
 };
 
+export const OverdueBillCount = () => {
+  getAllDataFromRealm(BillSchema).length;
+};
+
 export const closeDatabase = instance => {
   instance.close();
 };
@@ -87,10 +91,25 @@ export const getAllBillForSearch = instance => {
   return getAllDataFromRealm(instance).filtered('isPaid  == false');
 };
 
-export const paidBills = (last, billInstance) => {
-  const calcDate = Number(moment().subtract(last, 'days').format('YYYYMMDD'));
+export const paidBills = (
+  last,
+  billInstance,
+  groupShow = false,
+  particularDate = null,
+) => {
+  const calcDate =
+    particularDate != null
+      ? particularDate
+      : Number(moment().subtract(last, 'days').format('YYYYMMDD'));
+  console.log('[Calc Date Paid Bills]', calcDate);
+  if (groupShow) {
+    return getAllDataFromRealm(billInstance).filtered(
+      'paidOn >= $0 && isPaid == true',
+      calcDate,
+    );
+  }
   return getAllDataFromRealm(billInstance).filtered(
-    'due == $0 && isPaid == true',
+    'paidOn == $0 && isPaid == true',
     calcDate,
   );
 };
@@ -102,27 +121,42 @@ export const returnPaginatedData = (startFrom, end, data: Array) => {
   return data.slice(startFrom, end + 1);
 };
 
-export const payBillHelper = (item, schema, date, amount) => {
+export const payBillHelper = (item, schema, date, amount, isPaid, callback) => {
   if (item.amount < amount) return;
+  const _DateToNumber = Number(moment(date, 'MMMM D,YYYY').format('YYYYMMDD'));
   schema.write(() => {
-    item = {
-      billName: item.billName,
-      billAmount: item.billAmount,
-      isPaid: item.billAmount - amount === 0,
-      type: item.type,
-      paidDates: [
-        ...item.paidDates,
-        {
-          amount,
-          date: Number(moment(date).format('YYYYMMDD')),
-        },
-      ],
-    };
+    (item.isPaid = isPaid),
+      (item.paidOn = _DateToNumber),
+      item.paidDates.push({
+        amount,
+        date: _DateToNumber,
+      });
   });
+  callback();
 };
 
-export const deleteBill = (item, BillSchema) => {
+export const deleteBill = (item, BillSchema, callback) => {
   BillSchema.write(() => {
     BillSchema.delete(item);
   });
+  callback();
+};
+
+export const betweenTwoDates = (fromDate, toDate, BillSchema) => {
+  if (toDate == null) {
+    return paidBills(
+      0,
+      BillSchema,
+      false,
+      Number(moment(fromDate, 'MMMM D,YYYY').format('YYYYMMDD')),
+    );
+  } else {
+    const from = Number(moment(fromDate).format('YYYYMMDD'));
+    const to = Number(moment(toDate).format('YYYYMMDD'));
+    return getAllDataFromRealm(BillSchema).filtered(
+      'paidOn >= $0 && paidOn <= $1 && isPaid == true',
+      from,
+      to,
+    );
+  }
 };

@@ -5,16 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  FlatList,
   StatusBar,
   Alert,
-  ScrollView,
   Animated,
-  Easing,
-  Platform,
 } from 'react-native';
 import {Colors} from '../../components/Color';
-import {FontAwesome, AntDesign, Ionicons, Entypo} from '../../components/Icons';
+import {FontAwesome, AntDesign, Entypo} from '../../components/Icons';
 import {heightToDp} from '../../components/Responsive';
 import {ADD_NEW_BILL, SEARCH_SCREEN} from '../../components/navigationTypes';
 import {databases} from '../../..';
@@ -22,22 +18,19 @@ import MenuModal from '../../components/MenuModal';
 import {forwardRef} from 'react';
 import BillSchema from '../../DB/NewSch';
 import {
-  closeDatabase,
   getAllDataFromRealm,
   getOverdueBills,
+  OverdueBillCount,
   returnPaginatedData,
   sortByDate,
-  sortThisMonthBillByDate,
 } from '../../databases/realm.helper';
 
 import PressableButton from '../../components/PressableButton';
-import FilteredSelection from '../../components/FilteredSelection';
 import OptimizedFlatlist from '../../components/OptimizedFlatlist';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import SortModal from '../../components/SortModal';
 import {useNavigation} from '@react-navigation/core';
-import moment from 'moment';
-const {width, height} = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const topNavs = [
   {name: 'Pending Bills', bgColors: Colors.primary, ref: React.createRef()},
   {name: 'Overdue Bills', bgColors: Colors.tomato, ref: React.createRef()},
@@ -125,9 +118,9 @@ const Tabbb = React.memo(({scrollX, onItemPress, c, overdueBadge}) => {
     let m = [];
     if (containerRef.current) {
       topNavs.map(i => {
-        i.ref?.current?.measureLayout(containerRef.current, (x, y, z, a) => {
+        i.ref?.current?.measureLayout(containerRef.current, (x, z) => {
           m.push({x, z});
-          if (m.length == topNavs.length) {
+          if (m.length === topNavs.length) {
             setMeasure(m);
           }
         });
@@ -160,16 +153,18 @@ const Tabbb = React.memo(({scrollX, onItemPress, c, overdueBadge}) => {
 const ListOfBills = React.memo(
   forwardRef(({sortingType, SCROLLAnimated}, scrollRef) => {
     const navigation = useNavigation();
-    const [_lastStateScreenIndex, _setLastStateScreenIndex] = React.useState(0);
-    const _timeout = React.useRef().current;
+    const timeout = React.useRef();
+    const isMounted = React.useRef(true);
     const [data, setData] = React.useState([]);
     const [overdueBills, setOverDueBills] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const [allData, setAllData] = React.useState([]);
-    React.useEffect(() => {
-      const d = getOverdueBills(BillSchema);
+
+    const getBills = async () => {
+      setLoading(true);
+      const d = await getOverdueBills(BillSchema);
       let paginated = returnPaginatedData(0, 10, d);
-      const allBillPendingData = sortByDate(
+      const allBillPendingData = await sortByDate(
         BillSchema,
         sortingType.type,
         sortingType.technique,
@@ -179,35 +174,29 @@ const ListOfBills = React.memo(
       setData(pgPendData);
       setAllData(allBillPendingData);
       setOverDueBills(paginated);
-      setLoading(false);
-      // setAllOverdueData(d);
-      return () => clearTimeout(_timeout);
-    }, [sortingType.technique, sortingType.type]);
+      timeout.current = setTimeout(() => {
+        setLoading(false);
+      });
+    };
+    React.useEffect(() => {
+      async function _InitCallForGettingBills() {
+        await getBills();
+      }
+      _InitCallForGettingBills();
 
-    // React.useEffect(() => {
-    //   if (showVisibility === 'This Month') {
-    //     const d = sortThisMonthBillByDate(BillSchema, false);
-    //     const paginated = returnPaginatedData(0, 10, d);
-    //     console.log('Paginated Data =>,', paginated);
-    //     setData(paginated);
-    //     setLoading(false);
-    //     setAllData(d);
-    //   } else {
-    //     console.log('Sort by date...');
-    //     const d = sortByDate(BillSchema, false);
-    //     const paginated = returnPaginatedData(0, 10, d);
-    //     setAllData(d);
-    //     setData(paginated);
-    //     setLoading(false);
-    //   }
-    // }, [showVisibility]);
+      return clearTimeout(timeout?.current);
+    }, [sortingType.technique, sortingType.type]);
 
     React.useEffect(() => {
       const unsubscribe = navigation.addListener('focus', () => {
-        getAllDataFromRealm(BillSchema).addListener(billChangeListener);
+        if (isMounted?.current) {
+          getAllDataFromRealm(BillSchema).addListener(billChangeListener);
+        }
       });
 
       return () => {
+        clearTimeout(timeout?.current);
+        isMounted.current = false;
         const tasks = BillSchema.objects('Billl');
         tasks.removeAllListeners();
         // closeDatabase(BillSchema);
@@ -215,48 +204,15 @@ const ListOfBills = React.memo(
       };
     }, [navigation]);
 
-    const billChangeListener = (bill, changes) => {
-      if (changes.insertions.length != 0) {
-        const a = sortByDate(
-          BillSchema,
-          sortingType.type,
-          sortingType.technique,
-        );
-        const paginated = returnPaginatedData(0, 10, a);
-        setAllData(a);
-        setData(paginated);
+    const billChangeListener = (_, changes) => {
+      if (changes.insertions.length != 0 || changes.modifications.length != 0) {
+        getBills();
       } else if (changes.deletions.length != 0) {
         // setLoading(true);
-        let newData = allData.filter(item => {
-          return (
-            item.billName != bill[0].billName &&
-            item.due != bill[0].due &&
-            item.billAmount != bill[0].billAmount
-          );
-        });
-        setAllData(newData);
-        const nwPaginated = returnPaginatedData(0, 10, newData);
-        setData(nwPaginated);
+        getBills();
       }
     };
     const SIDE_MARGIN = 20;
-
-    const deleteBill = React.useCallback(item => {
-      Alert.alert('Delete', `Want to delete Bill ${item.billName}`, [
-        {
-          text: 'Cancel',
-          onPress: () => {},
-        },
-        {
-          text: 'Delete',
-          onPress: () => {
-            databases.action(async () => {
-              await item.destroyPermanently();
-            });
-          },
-        },
-      ]);
-    }, []);
 
     // const _listener = e => {
     //   const checkForScreenChange =
@@ -349,7 +305,7 @@ const PendingBillNew = ({navigation}) => {
       x: i * width - 20,
       animated: true,
     });
-  });
+  }, []);
 
   // const isSrollAnimated = useSharedValue(false);
   const closeMenuModal = React.useCallback(() => {
@@ -397,22 +353,16 @@ const PendingBillNew = ({navigation}) => {
     setShowSortModal(false);
   }, []);
 
-  // React.useEffect(() => {
-  //   console.log('Visible Modal', visibleModal);
-  //   Animated.timing(RNAnimated, {
-  //     toValue: visibleModal === true ? 1 : 0,
-  //     duration: 250,
-  //     useNativeDriver: true,
-  //     easing: Easing.inOut(Easing.linear),
-  //   }).start();
-  // }, [visibleModal]);
-
   const getSortPreferCallback = (technique, type) => {
     setSortingtype({
       technique,
       type,
     });
   };
+
+  React.useEffect(() => {
+    console.log('Count=>', OverdueBillCount());
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -554,6 +504,10 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     zIndex: 10,
     backgroundColor: '#f1f1f1',
+    bottom: 0,
+    right: 0,
+    left: 0,
+    position: 'absolute',
   },
   addNewBillContainer: {
     backgroundColor: Colors.primary,

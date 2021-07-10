@@ -111,18 +111,11 @@ class OptimizedFlatist extends React.Component {
   };
   removeItem = item => {};
   render() {
-    const {listData, currentCursorForPagination} = this.state;
-    console.log('w', this.state.listData.length);
-    console.log('we', this.props.allData.length);
+    const {listData} = this.state;
     return (
       <FlatList
-        // key={uniqueId.toString()}
-        // // getItemLayout={getItemLayout}
-        // initialNumToRender={10}
         onEndReached={this.loadMoreBills}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={<EmptyListComponent />}
-        // removeClippedSubviews={true}
         data={listData}
         renderItem={this.renderItem}
         keyExtractor={this.keyExtractor}

@@ -13,6 +13,7 @@ import PressableButton from './PressableButton';
 
 const {height} = Dimensions.get('window');
 
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 const ICON_SIZE = 20;
 function Item({label, up = true, onPress, closeModal, ...rest}) {
   const itemPress = () => {
@@ -69,19 +70,14 @@ export default function SortModal({closeSortModal, itemOnPress}) {
     });
   };
   return (
-    <Animated.View
+    <AnimatedTouchable
+      activeOpacity={1}
+      onPress={onPress}
       style={[
-        styles.container,
+        StyleSheet.absoluteFill,
         {
-          transform: [
-            {
-              translateY: _mount.interpolate({
-                inputRange: [0, 1],
-                outputRange: [height / 2, 0],
-                extrapolate: 'clamp',
-              }),
-            },
-          ],
+          zIndex: 100,
+          backgroundColor: 'rgba(0,0,0,0.3)',
           opacity: _mount.interpolate({
             inputRange: [0, 1],
             outputRange: [0.4, 1],
@@ -89,52 +85,77 @@ export default function SortModal({closeSortModal, itemOnPress}) {
           }),
         },
       ]}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.sortText}>Sort By</Text>
-        <TouchableOpacity
-          //   onPress={() => {
-          //     animatedValue.value = withTiming(0);
-          //   }}
-          onPress={onPress}
-          activeOpacity={0.9}
-          hitSlop={styles.hitSlop}
-          style={{position: 'absolute', top: 5, right: 10}}>
-          <Entypo name="cross" size={30} />
-        </TouchableOpacity>
-      </View>
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            transform: [
+              {
+                translateY: _mount.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [height / 2, 0],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+            opacity: _mount.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.4, 1],
+              extrapolate: 'clamp',
+            }),
+          },
+        ]}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.sortText}>Sort By</Text>
+          <TouchableOpacity
+            //   onPress={() => {
+            //     animatedValue.value = withTiming(0);
+            //   }}
+            onPress={onPress}
+            activeOpacity={0.9}
+            hitSlop={styles.hitSlop}
+            style={{position: 'absolute', top: 5, right: 10}}>
+            <Entypo name="cross" size={30} />
+          </TouchableOpacity>
+        </View>
 
-      <Item
-        closeModal={closeSortModal}
-        onPress={itemOnPress}
-        label="Date"
-        style={{marginTop: 10}}
-      />
-      <Item
-        closeModal={closeSortModal}
-        onPress={itemOnPress}
-        label="Date"
-        up={false}
-      />
+        <Item
+          closeModal={closeSortModal}
+          onPress={itemOnPress}
+          label="Date"
+          style={{marginTop: 10}}
+        />
+        <Item
+          closeModal={closeSortModal}
+          onPress={itemOnPress}
+          label="Date"
+          up={false}
+        />
 
-      <Item closeModal={closeSortModal} onPress={itemOnPress} label="Amount" />
-      <Item
-        closeModal={closeSortModal}
-        onPress={itemOnPress}
-        label="Amount"
-        up={false}
-      />
-    </Animated.View>
+        <Item
+          closeModal={closeSortModal}
+          onPress={itemOnPress}
+          label="Amount"
+        />
+        <Item
+          closeModal={closeSortModal}
+          onPress={itemOnPress}
+          label="Amount"
+          up={false}
+        />
+      </Animated.View>
+    </AnimatedTouchable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 10,
     borderTopStartRadius: 20,
     borderTopEndRadius: 20,
-    zIndex: 100,
+
     position: 'absolute',
     right: 0,
     left: 0,
@@ -146,13 +167,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#eee',
   },
   sortText: {
     fontSize: 18,
     textAlign: 'center',
     color: '#000',
-    fontWeight: 'bold',
+    fontFamily: 'OpenSans-Bold',
   },
   hitSlop: {
     top: 10,

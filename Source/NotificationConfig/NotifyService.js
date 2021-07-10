@@ -4,6 +4,7 @@ class NotifyManager {
   clearAllDeliveredNotifications() {
     PushNotification.removeAllDeliveredNotifications();
   }
+
   configureNotifications() {
     PushNotification.configure({
       onNotification: notification => {

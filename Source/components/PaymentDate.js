@@ -1,5 +1,6 @@
 import React from 'react';
 import {Text, TextInput, View} from 'react-native';
+import moment from 'moment';
 import {Colors} from './Color';
 import {AntDesign} from './Icons';
 import SelectionDate from './SelectionDate';
@@ -14,7 +15,10 @@ const PaymentDate = ({
   payFullAmount,
   amount,
   partlyPaidFunction,
+  remainingBalance,
+  lastPaidDates,
 }) => {
+  console.log(lastPaidDates);
   return (
     <View
       style={{
@@ -48,6 +52,7 @@ const PaymentDate = ({
           <DatePicker
             value={new Date(Date.now())}
             onChange={onModalDateSelection}
+            maximumDate={new Date(Date.now())}
           />
         )}
         <View style={{marginTop: 20}}>
@@ -93,6 +98,22 @@ const PaymentDate = ({
           </View>
         </View>
         <View style={{marginTop: 20}}>
+          {remainingBalance != totalAmount && lastPaidDates != null && (
+            <View>
+              <Text
+                style={{
+                  fontFamily: 'OpenSans-Bold',
+                  color: 'rgba(0, 171, 102, 1)',
+                  textAlign: 'center',
+                }}>
+                Last Paid -{' '}
+                {moment(
+                  lastPaidDates[lastPaidDates.length - 1].date,
+                  'YYYYMMDD',
+                ).format('DD/MM/YYYY')}
+              </Text>
+            </View>
+          )}
           <View
             style={{
               flexDirection: 'row',
@@ -111,7 +132,11 @@ const PaymentDate = ({
                 fontFamily: 'OpenSans-SemiBold',
                 fontSize: 18,
               }}>
-              {amount.length == 0 ? totalAmount : amount}
+              {remainingBalance != totalAmount
+                ? remainingBalance
+                : amount.length == 0
+                ? totalAmount
+                : amount}
             </Text>
           </View>
 
@@ -146,6 +171,9 @@ const PaymentDate = ({
                 marginLeft: 10,
                 borderBottomColor: '#222',
                 textAlign: 'center',
+                fontSize: 18,
+                fontFamily: 'OpenSans-SemiBold',
+                flex: 1,
               }}
             />
           </View>

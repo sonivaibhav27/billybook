@@ -45,7 +45,7 @@ const FormComponent = ({
             <Text
               style={{
                 color: '#000',
-                fontWeight: 'bold',
+                fontFamily: 'OpenSans-SemiBold',
               }}>
               {value}
             </Text>
@@ -66,7 +66,7 @@ const FormComponent = ({
             activeOpacity={1}
             onPress={onPress}
             style={styles.textContainer}>
-            <Text style={{color: '#000', fontFamily: 'OpenSans-Bold'}}>
+            <Text style={{color: '#000', fontFamily: 'OpenSans-SemiBold'}}>
               {value}
             </Text>
           </TouchableOpacity>
@@ -85,21 +85,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 6,
     backgroundColor: '#fff',
-    // elevation: 2,
     borderRadius: 8,
     marginTop: 2,
-    // borderBottomWidth: 2,
-    // borderColor: Colors.primary,
-    // elevation: 3,
     borderWidth: 1,
     borderColor: '#eee',
   },
   textContainer: {
     padding: 5,
-    // fontFamily: 'Raleway-Bold',
     color: '#000',
-    fontFamily: 'OpenSans-SemiBold',
     fontSize: 16,
+    fontWeight: '700',
   },
 
   labelText: {

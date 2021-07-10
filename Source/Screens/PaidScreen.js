@@ -17,7 +17,7 @@ import Card from '../components/Card';
 import {Colors} from '../components/Color';
 import Header from '../components/Header';
 // import {betweenTwoDates, paidBills, paidCall} from '../databases/helper';
-import {paidBills} from '../databases/realm.helper';
+import {betweenTwoDates, paidBills} from '../databases/realm.helper';
 import TypeModal from '../components/TypeModal';
 import NewCard from '../components/NewCard';
 import LoadingIndicator from '../components/LoadingIndicator';
@@ -114,30 +114,27 @@ export default class PaidScreen extends Component {
       const a = await paidBills(1, BillSchema);
       this.setState({loading: false, data: a});
     } else if (filteredBillName === data[2]) {
-      const b = await paidBills(15, BillSchema);
+      const b = await paidBills(15, BillSchema, true);
       this.setState({loading: false, data: b});
     } else if (filteredBillName === data[3]) {
-      const c = await paidBills(30, BillSchema);
+      const c = await paidBills(30, BillSchema, true);
       this.setState({loading: false, data: c});
     } else if (filteredBillName === data[4]) {
-      // this.setState({
-      //   showDateColumn: true,
-      //   loading: false,
-      // });
-
       this.setState({
         dateOpen: true,
+        loading: false,
       });
     }
   };
   openFilteredModal = () => {
-    this.setState({openModalState: true});
+    this.setState({openModalState: true, dateOpen: false});
   };
 
   closeOpenModalState = () => {
     this.setState({openModalState: false});
   };
   setType = item => {
+    this.setState({openModalState: false});
     if (item !== this.state.filteredBillName) {
       this.setState({showFromAndToDates: false});
       if (item === data[4]) {
@@ -152,7 +149,7 @@ export default class PaidScreen extends Component {
 
   getBetweenTwoDates = async () => {
     const {fromDate, toDate} = this.state;
-    const d = await betweenTwoDates(fromDate.date, toDate);
+    const d = await betweenTwoDates(fromDate.date, toDate, BillSchema);
     console.log(d);
     this.setState({
       data: d,
@@ -315,7 +312,11 @@ export default class PaidScreen extends Component {
                 });
               }
             }}
-            minimumDate={fromDate.isSet ? fromDate.date : new Date(1969, 0, 1)}
+            minimumDate={
+              fromDate.isSet && !isFromCalled
+                ? fromDate.date
+                : new Date(1969, 0, 1)
+            }
             value={new Date(Date.now())}
           />
         )}

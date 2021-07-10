@@ -6,5 +6,6 @@ export default class ParticularBillClass {
     this.type = item.type;
     this.isPaid = item.isPaid;
     this.remark = item.remark;
+    this.paidDates = item.paidDates;
   }
 }

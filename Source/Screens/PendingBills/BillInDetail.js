@@ -4,11 +4,10 @@ import {
   StyleSheet,
   Text,
   ToastAndroid,
-  TouchableOpacity,
   UIManager,
   View,
   TouchableNativeFeedback,
-  Animated,
+  Alert,
 } from 'react-native';
 import moment from 'moment';
 import {Colors} from '../../components/Color';
@@ -18,10 +17,10 @@ import PaymentDate from '../../components/PaymentDate';
 import {updateIsPaid} from '../../databases/helper';
 import Loading from '../../components/Loading';
 import PreviousPaymentHistory from '../../components/PreviousPaymentHistory';
-import {Easing} from 'react-native-reanimated';
 import Button from '../../components/Button';
 import ParticularBillClass from './ItemClass';
-import {ParticularBillScreen} from '..';
+import {deleteBill, payBillHelper} from '../../databases/realm.helper';
+import BillSchema from '../../DB/NewSch';
 UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const getFormateDate = momentObject => {
@@ -32,6 +31,7 @@ const BillInDetail = ({
   route: {
     params: {item, over, callFromPaid},
   },
+  navigation,
 }) => {
   const [selected, setSelected] = React.useState('Today');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -39,6 +39,7 @@ const BillInDetail = ({
   const [amount, setAmount] = React.useState('');
   const [showPreviousHistory, setShowPreviousHistory] = React.useState(false);
   const [showDone, setShowDone] = React.useState(false);
+  const [remainingBalance, setRemainingBalance] = React.useState(0);
 
   const toggleShowPayHistory = () => {
     setShowPreviousHistory(a => !a);
@@ -65,15 +66,17 @@ const BillInDetail = ({
   }, []);
 
   const partlyPaidFunction = e => {
-    if (Number(e) <= item.billAmount) {
+    const amountToDeductFrom =
+      remainingBalance != 0
+        ? item.billAmount - remainingBalance
+        : item.billAmount;
+    if (Number(e) <= amountToDeductFrom) {
       setAmount(e);
-      // setAmountExceedError(false);
     } else {
       setAmount('');
-      // setAmountExceedError(true);
-
       ToastAndroid.showWithGravityAndOffset(
-        'Amount should be less than bill amount ' + item.billAmount,
+        'Amount should be less  than  or equal to bill amount ' +
+          amountToDeductFrom,
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
         0,
@@ -82,24 +85,72 @@ const BillInDetail = ({
     }
   };
 
+  // [12,232,432] - billAMount
+  const isPaidBill = paidsAmount => {
+    return item.billAmount == paidsAmount;
+  };
   const onMarkPaidPress = () => {
-    const data = JSON.stringify({
-      amount: amount === '' ? item.billAmount : amount,
-      name: item.billName,
-      date: date,
+    const fullOrExactAmount =
+      amount != ''
+        ? Number(amount)
+        : remainingBalance != 0
+        ? item.billAmount - remainingBalance
+        : item.billAmount;
+
+    const isPaid = isPaidBill(remainingBalance + fullOrExactAmount);
+    // alert(isPaid);
+    payBillHelper(item, BillSchema, date, fullOrExactAmount, isPaid, () => {
+      setDate(moment().format('MMMM D, YYYY'));
+      setSelected('Today');
     });
-    alert(data);
+    ToastAndroid.showWithGravityAndOffset(
+      'Mark as paid',
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM,
+      0,
+      20,
+    );
   };
 
   const closeModal = React.useCallback(() => {
     setShowPreviousHistory(false);
   }, []);
 
+  const deleteBillHelper = () => {
+    Alert.alert(
+      'Delete bill?',
+      'Are you sure to delete the bill, this action is not reversible',
+      [
+        {
+          text: 'Cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            deleteBill(item, BillSchema, () => {
+              navigation.pop();
+            });
+          },
+        },
+      ],
+    );
+  };
+  React.useEffect(() => {
+    if (item.paidDates.length > 0) {
+      let remainingBalance = 0;
+      item.paidDates.forEach(particularBill => {
+        remainingBalance += particularBill.amount;
+      });
+      setRemainingBalance(remainingBalance);
+    }
+  }, [item.paidDates]);
+
   const bill = new ParticularBillClass(item);
   return (
     <View style={[styles.container]}>
       <Header headerText="payment detail " isBackable />
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         style={{
           flex: 1,
           // marginBottom: 75,
@@ -119,18 +170,6 @@ const BillInDetail = ({
             borderColor: over ? Colors.tomato : Colors.primary,
             marginBottom: 10,
           }}>
-          {/* <View
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              top: 0,
-              backgroundColor: 'white',
-              // zIndex: -4,
-              // elevation: 5,
-            }}
-          /> */}
           <View
             style={{
               flexDirection: 'row',
@@ -197,32 +236,35 @@ const BillInDetail = ({
             </View>
           )}
         </View>
-        <View
-          style={{
-            marginHorizontal: 20,
-            backgroundColor: '#eee',
-            padding: 10,
-            borderRadius: 50,
-            // overflow: 'hidden',
-          }}>
-          <TouchableNativeFeedback
-            style={{flex: 1}}
-            // background={TouchableNativeFeedback.Ripple('#000', true)}
-            onPress={toggleShowPayHistory}>
-            <Text
-              style={{
-                fontFamily: 'OpenSans-Bold',
-                color: '#333',
-                textAlign: 'center',
-              }}>
-              {showPreviousHistory ? 'Hide' : 'Show'} earlier payments{' '}
-              <Entypo name="chevron-right" />
-            </Text>
-          </TouchableNativeFeedback>
-        </View>
+        {bill.paidDates.length != 0 && (
+          <View
+            style={{
+              marginHorizontal: 20,
+              backgroundColor: '#eee',
+              padding: 10,
+              borderRadius: 50,
+              // overflow: 'hidden',
+            }}>
+            <TouchableNativeFeedback
+              style={{flex: 1}}
+              // background={TouchableNativeFeedback.Ripple('#000', true)}
+              onPress={toggleShowPayHistory}>
+              <Text
+                style={{
+                  fontFamily: 'OpenSans-Bold',
+                  color: '#333',
+                  textAlign: 'center',
+                }}>
+                {showPreviousHistory ? 'Hide' : 'Show'} earlier payments{' '}
+                <Entypo name="chevron-right" />
+              </Text>
+            </TouchableNativeFeedback>
+          </View>
+        )}
 
         {!callFromPaid && bill.isPaid === false && (
           <PaymentDate
+            remainingBalance={item.billAmount - remainingBalance}
             selectedDate={selected}
             onDateSelection={selectDate}
             userSelectedDate={date}
@@ -232,6 +274,7 @@ const BillInDetail = ({
             payFullAmount={payFullAmount}
             amount={amount}
             partlyPaidFunction={partlyPaidFunction}
+            lastPaidDates={item.paidDates}
           />
         )}
       </ScrollView>
@@ -246,28 +289,25 @@ const BillInDetail = ({
             flexDirection: 'row',
           }}>
           <Button
+            containerStyle={{flex: 1}}
             backgroundColor={Colors.lightTomato}
             textColor={Colors.tomato}
             text="Delete"
+            onPress={deleteBillHelper}
             style={{borderRadius: 40, maxWidth: 200}}
           />
           <Button
+            containerStyle={{flex: 1}}
             backgroundColor={Colors.primary}
             textColor={'#fff'}
             text="Mark as Paid"
+            onPress={onMarkPaidPress}
             style={{borderRadius: 40, flex: 1, maxWidth: 200}}
           />
         </View>
       )}
-      {item.isPaid === false && showPreviousHistory && (
-        <PreviousPaymentHistory closeModal={closeModal} />
-      )}
-      {showDone && (
-        <Loading
-          closed={() => {
-            setShowDone(false);
-          }}
-        />
+      {showPreviousHistory && (
+        <PreviousPaymentHistory data={item.paidDates} closeModal={closeModal} />
       )}
     </View>
   );
