@@ -6,14 +6,12 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  Alert,
   Animated,
 } from 'react-native';
 import {Colors} from '../../components/Color';
 import {FontAwesome, AntDesign, Entypo} from '../../components/Icons';
 import {heightToDp} from '../../components/Responsive';
 import {ADD_NEW_BILL, SEARCH_SCREEN} from '../../components/navigationTypes';
-import {databases} from '../../..';
 import MenuModal from '../../components/MenuModal';
 import {forwardRef} from 'react';
 import BillSchema from '../../DB/NewSch';
@@ -90,7 +88,7 @@ const IndicatorLine = React.memo(({scrollX, measures}) => {
 });
 
 const Tab = React.forwardRef(
-  ({name, onItemPress, index, overdueBadge, scrollX}, ref) => {
+  ({name, onItemPress, index, overdueBadge}, ref) => {
     return (
       <TouchableOpacity
         activeOpacity={0.9}
@@ -179,30 +177,15 @@ const ListOfBills = React.memo(
       });
     };
     React.useEffect(() => {
-      async function _InitCallForGettingBills() {
+      async function initialCallToGetBill() {
         await getBills();
       }
-      _InitCallForGettingBills();
-
+      initialCallToGetBill();
+    }, []);
+    React.useEffect(() => {
+      getAllDataFromRealm(BillSchema).addListener(billChangeListener);
       return clearTimeout(timeout?.current);
     }, [sortingType.technique, sortingType.type]);
-
-    React.useEffect(() => {
-      const unsubscribe = navigation.addListener('focus', () => {
-        if (isMounted?.current) {
-          getAllDataFromRealm(BillSchema).addListener(billChangeListener);
-        }
-      });
-
-      return () => {
-        clearTimeout(timeout?.current);
-        isMounted.current = false;
-        const tasks = BillSchema.objects('Billl');
-        tasks.removeAllListeners();
-        // closeDatabase(BillSchema);
-        unsubscribe();
-      };
-    }, [navigation]);
 
     const billChangeListener = (_, changes) => {
       if (changes.insertions.length != 0 || changes.modifications.length != 0) {
@@ -213,18 +196,6 @@ const ListOfBills = React.memo(
       }
     };
     const SIDE_MARGIN = 20;
-
-    // const _listener = e => {
-    //   const checkForScreenChange =
-    //     e.nativeEvent.contentOffset.x / (width - SIDE_MARGIN);
-    //   if (
-    //     _lastStateScreenIndex !== checkForScreenChange &&
-    //     isInt(checkForScreenChange)
-    //   ) {
-    //     _setLastStateScreenIndex(checkForScreenChange);
-    //   }
-    // };
-
     if (loading) {
       return <LoadingIndicator title="Loading Bills ..." />;
     }
@@ -233,6 +204,7 @@ const ListOfBills = React.memo(
         style={{
           marginHorizontal: 10,
           flex: 1,
+          marginBottom: 70,
         }}>
         <Animated.ScrollView
           ref={scrollRef}
@@ -293,11 +265,14 @@ const PendingBillNew = ({navigation}) => {
   const [openMenuModal, setOpenMenuModal] = React.useState(false);
   const [showSortModal, setShowSortModal] = React.useState(false);
   const [sortingType, setSortingtype] = React.useState({
-    technique: 'billAmount',
-    type: true,
+    technique: 'due',
+    type: false,
   });
   const navigateToCreateBillScreen = () => {
-    navigation.navigate(ADD_NEW_BILL);
+    navigation.navigate(ADD_NEW_BILL, {
+      title: 'Create Bill',
+      bill: null,
+    });
   };
 
   const onItemPress = React.useCallback(i => {
@@ -425,7 +400,7 @@ const PendingBillNew = ({navigation}) => {
 
       {openMenuModal && <MenuModal {...{closeMenuModal}} />}
       <ListOfBills
-        {...{sortingType}}
+        sortingType={sortingType}
         ref={scrollRef}
         SCROLLAnimated={SCROLLAnimated}
       />

@@ -1,37 +1,33 @@
 import React from 'react';
-import {
-  Text,
-  TouchableNativeFeedback,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-} from 'react-native';
+import {Text, TouchableNativeFeedback, StyleSheet, View} from 'react-native';
 
-export default ({
-  text,
-  textColor,
-  backgroundColor,
-  onPress,
-  containerStyle,
-  ...rest
-}) => {
-  console.log(rest);
-  return (
-    <View
-      style={{
-        overflow: 'hidden',
-        borderRadius: 40,
-        marginRight: 5,
-        ...containerStyle,
-      }}>
-      <TouchableNativeFeedback onPress={onPress}>
-        <View style={[styles.container, {backgroundColor, ...rest.style}]}>
-          <Text style={[styles.text, {color: textColor}]}>{text}</Text>
-        </View>
-      </TouchableNativeFeedback>
-    </View>
-  );
+const areEqual = (prevProps, nextProps) => {
+  if (prevProps.text !== nextProps.text) {
+    return true;
+  }
+  return false;
 };
+export default React.memo(
+  ({text, textColor, backgroundColor, onPress, containerStyle, ...rest}) => {
+    return (
+      <View
+        //eslint-disable-next-line react-native/no-inline-styles
+        style={{
+          overflow: 'hidden',
+          borderRadius: 40,
+          marginRight: 5,
+          ...containerStyle,
+        }}>
+        <TouchableNativeFeedback onPress={onPress}>
+          <View style={[styles.container, {backgroundColor, ...rest.style}]}>
+            <Text style={[styles.text, {color: textColor}]}>{text}</Text>
+          </View>
+        </TouchableNativeFeedback>
+      </View>
+    );
+  },
+  areEqual,
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -43,6 +39,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 20,
-    fontFamily: 'OpenSans-Bold',
+    fontFamily: 'OpenSans-SemiBold',
+    letterSpacing: 1.1,
   },
 });

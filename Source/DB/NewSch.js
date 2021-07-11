@@ -1,3 +1,4 @@
+import Realm from 'realm';
 const Dates = {
   name: 'PaidDate',
   embedded: true,
@@ -10,12 +11,13 @@ const Dates = {
 const Bill = {
   name: 'Billl',
   properties: {
+    _id: 'string',
     billName: 'string',
     billAmount: 'int',
-    due: 'int',
+    due: {type: 'int', indexed: true},
     type: 'string',
-    paidOn: 'int',
-    isPaid: {type: 'bool', default: false},
+    paidOn: {type: 'int', indexed: true},
+    isPaid: {type: 'bool', default: false, indexed: true},
     paidDates: {
       type: 'list',
       objectType: 'PaidDate',
@@ -30,7 +32,7 @@ const Bill = {
 export default new Realm({
   path: 'helloworld.realm',
   schema: [Bill, Dates],
-  schemaVersion: 7,
+  schemaVersion: 8,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 7) {
       const oldObjects = oldRealm.objects('Billl');

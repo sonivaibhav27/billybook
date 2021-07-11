@@ -1,8 +1,9 @@
-import Realm from 'realm';
 import moment from 'moment';
 import BillSchema from '../DB/NewSch';
 import {ToastAndroid} from 'react-native';
+import Realm from 'realm';
 
+const {UUID} = Realm.BSON;
 const getTodayDate = () => {
   return Number(moment().format('YYYYMMDD'));
 };
@@ -62,10 +63,12 @@ export const createBillInDatabase = (
     ToastAndroid.show('Please Enter all fields', ToastAndroid.SHORT);
     return;
   }
+  const id = new UUID().toHexString();
   return new Promise((resolve, reject) => {
     realmInstance.write(() => {
       for (let i = 0; i < repeat.count; i++) {
         const bill = realmInstance.create('Billl', {
+          _id: id,
           billName,
           billAmount: Number(billAmount),
           due: Number(moment(due).add(i, 'M').format('YYYYMMDD')),
@@ -91,6 +94,11 @@ export const getAllBillForSearch = instance => {
   return getAllDataFromRealm(instance).filtered('isPaid  == false');
 };
 
+export const modifyBill = (BillSchema, bill, {name}) => {
+  BillSchema.write(() => {
+    bill.name = name;
+  });
+};
 export const paidBills = (
   last,
   billInstance,
@@ -159,4 +167,16 @@ export const betweenTwoDates = (fromDate, toDate, BillSchema) => {
       to,
     );
   }
+};
+
+export const DeleteLastPayment = (BillSchema, bill) => {
+  BillSchema.write(() => {
+    bill.paidDates.pop();
+  });
+};
+
+export const UnPayBill = (BillSchema, bill) => {
+  BillSchema.write(() => {
+    (bill.isPaid = false), (bill.paidDates = []);
+  });
 };

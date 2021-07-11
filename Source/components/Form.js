@@ -1,7 +1,5 @@
-import {useNavigation} from '@react-navigation/core';
 import React from 'react';
 import {
-  KeyboardAvoidingView,
   StyleSheet,
   Text,
   TextInput,
@@ -9,10 +7,6 @@ import {
   View,
 } from 'react-native';
 import {Colors} from './Color';
-import {PARTICULAR_BILL} from './navigationTypes';
-import {normalize} from './TextSize';
-import TypeModal from './TypeModal';
-
 const FormComponent = ({
   label,
   isCompulsoryField,
@@ -94,7 +88,7 @@ const styles = StyleSheet.create({
     padding: 5,
     color: '#000',
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: 'OpenSans-SemiBold',
   },
 
   labelText: {

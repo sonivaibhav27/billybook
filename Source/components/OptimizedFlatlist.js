@@ -54,6 +54,7 @@ class OptimizedFlatist extends React.Component {
     };
   }
   loadMoreBills = () => {
+    console.log('[OptimizedFlatlist] Called');
     if (this.state.listData.length === this.props.allData.length) {
       return;
     }
@@ -69,8 +70,8 @@ class OptimizedFlatist extends React.Component {
   };
   getItemLayout = (data, index) => {
     return {
-      length: height * 0.05,
-      offset: height * 0.05 * index,
+      length: height * 0.13,
+      offset: height * 0.13 * index,
       index,
     };
   };
@@ -110,12 +111,18 @@ class OptimizedFlatist extends React.Component {
     return `${index}`;
   };
   removeItem = item => {};
+  renderFooter = () => {
+    if (this.state.listData.length == this.props.allData.length) return null;
+    else return <ActivityIndicator size="large" color="#000" />;
+  };
   render() {
     const {listData} = this.state;
     return (
       <FlatList
+        getItemLayout={this.getItemLayout}
+        ListFooterComponent={this.renderFooter}
         onEndReached={this.loadMoreBills}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0}
         data={listData}
         renderItem={this.renderItem}
         keyExtractor={this.keyExtractor}

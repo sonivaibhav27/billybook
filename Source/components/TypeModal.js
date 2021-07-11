@@ -61,8 +61,8 @@ const TypeModal = ({setType, closeModal, data = null, style: propStyle}) => {
         delayPressIn={0}
         onPress={() => {
           // onPress();
-          setType(item);
           closeModal();
+          setType(item);
         }}>
         <View
           style={{

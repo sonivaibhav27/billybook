@@ -10,12 +10,12 @@ import {
 import moment from 'moment';
 import {AntDesign} from './Icons';
 import {useNavigation} from '@react-navigation/core';
-import {BILL_IN_DETAIL} from './navigationTypes';
+import {ADD_NEW_BILL, BILL_IN_DETAIL} from './navigationTypes';
 import PressableButton from './PressableButton';
 import {deleteBill} from '../databases/realm.helper';
 import BillSchema from '../DB/NewSch';
 
-const {width} = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 
 const nativeModule = NativeModules.MoneyFormat;
 const RowItem = React.memo(
@@ -35,7 +35,7 @@ const RowItem = React.memo(
   },
 );
 
-class _NewCard extends React.PureComponent {
+class _NewCard extends React.Component {
   // const navigation = useNavigation();
   constructor(props) {
     super(props);
@@ -86,14 +86,35 @@ class _NewCard extends React.PureComponent {
       },
     ]);
   };
+
+  editBill = () => {
+    this.props.navigation.navigate(ADD_NEW_BILL, {
+      title: 'Edit Bill',
+      bill: this.props.item,
+    });
+  };
+
+  shouldComponentUpdate = nextProps => {
+    const {item} = this.props;
+    // console.log('[Next Props]', nextProps);
+    if (
+      item.billName === nextProps.item.billName &&
+      item.paidDates.length === nextProps.item.paidDates.length &&
+      item.billAmount === nextProps.item.billAmount
+    ) {
+      return false;
+    }
+    return true;
+  };
+
   render() {
-    // console.log('Called New Card ...');
     const {item, overdue, isPaid} = this.props;
     return (
       <PressableButton
+        disabled={isPaid}
         onLongPress={this.delete}
         borderless={false}
-        onPress={this.goToBillInDetail}
+        onPress={this.editBill}
         style={[styles.container]}>
         <View style={{width: width * 0.5 - 20}}>
           <RowItem
@@ -130,13 +151,6 @@ class _NewCard extends React.PureComponent {
           </View>
           <View style={styles.buttonContainer}>
             <PressableButton
-              // rippleColor={
-              //   isPaid
-              //     ? 'rgba(0, 171, 102, 0.8)'
-              //     : overdue
-              //     ? '#EA5A72'
-              //     : '#2771C5'
-              // }
               onPress={this.goToBillInDetail}
               style={[
                 styles.button,
@@ -166,15 +180,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginVertical: 5,
     flexDirection: 'row',
-    // justifyContent: 'space-between',
     paddingVertical: 4,
     borderWidth: 0.2,
     borderColor: '#999',
     zIndex: -1,
-    flex: 1,
-  },
-  rowContainer: {
-    // height: height * 0.05,
+    height: height * 0.13,
+    justifyContent: 'space-between',
   },
   rowLabel: {
     fontSize: 12,

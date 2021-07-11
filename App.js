@@ -1,7 +1,6 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import {TopTabBar_Pend_Paid} from './Source/navigation';
-import {AddFundScreen} from './Source/Screens';
 import AsyncStorage from '@react-native-community/async-storage';
 import LoadingIndicator from './Source/components/LoadingIndicator';
 import {AppProvider} from './Source/components/Provider';

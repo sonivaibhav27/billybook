@@ -19,7 +19,11 @@ import Loading from '../../components/Loading';
 import PreviousPaymentHistory from '../../components/PreviousPaymentHistory';
 import Button from '../../components/Button';
 import ParticularBillClass from './ItemClass';
-import {deleteBill, payBillHelper} from '../../databases/realm.helper';
+import {
+  deleteBill,
+  payBillHelper,
+  UnPayBill,
+} from '../../databases/realm.helper';
 import BillSchema from '../../DB/NewSch';
 UIManager.setLayoutAnimationEnabledExperimental(true);
 
@@ -114,7 +118,14 @@ const BillInDetail = ({
 
   const closeModal = React.useCallback(() => {
     setShowPreviousHistory(false);
-  }, []);
+    if (item.paidDates.length >= 0) {
+      let remainingBalance = 0;
+      item.paidDates.forEach(particularBill => {
+        remainingBalance += particularBill.amount;
+      });
+      setRemainingBalance(remainingBalance);
+    }
+  }, [item.paidDates]);
 
   const deleteBillHelper = () => {
     Alert.alert(
@@ -146,35 +157,27 @@ const BillInDetail = ({
   }, [item.paidDates]);
 
   const bill = new ParticularBillClass(item);
+  const unpayBill = () => {
+    UnPayBill(BillSchema, item);
+    navigation.pop();
+  };
   return (
-    <View style={[styles.container]}>
+    <View style={styles.container}>
       <Header headerText="payment detail " isBackable />
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        style={{
-          flex: 1,
-          // marginBottom: 75,
-        }}
-        contentContainerStyle={{}}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={styles.container}>
         <View
           style={{
             marginTop: 20,
             borderRadius: 10,
             marginHorizontal: 20,
             padding: 15,
-            // backgroundColor: userPaid ? '#c5fad5' : 'rgba(243, 83, 105, 0.2)',
-            // elevation: 1,
             backgroundColor: '#fff',
             elevation: 2,
             borderLeftWidth: 4,
             borderColor: over ? Colors.tomato : Colors.primary,
             marginBottom: 10,
           }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}>
+          <View style={styles.rowAndCenter}>
             <View>
               <Text style={styles.labelText}>Bill Name</Text>
               <Text mul style={styles.actualTextStyle}>
@@ -182,69 +185,34 @@ const BillInDetail = ({
               </Text>
             </View>
             <View style={{marginRight: 10}}>
-              <Text style={[styles.labelText, {}]}>Type/Categories</Text>
+              <Text style={styles.labelText}>Type/Categories</Text>
               <Text style={styles.actualTextStyle}> {bill.type}</Text>
             </View>
           </View>
-          <View
-            style={{
-              marginTop: 10,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <View style={{}}>
+          <View style={styles.bottomBillDetails}>
+            <View>
               <Text style={styles.labelText}>Due on</Text>
               <Text style={styles.actualTextStyle}>
                 {' '}
                 {moment(bill.due, 'YYYYMMDD').format('MMM D, YYYY')}
               </Text>
             </View>
-            <View
-              style={{
-                paddingHorizontal: 15,
-                marginTop: 10,
-                justifyContent: 'center',
-                alignItems: 'center',
-                alignSelf: 'flex-start',
-                paddingVertical: 6,
-                borderRadius: 3,
-                // elevation: 0.3,
-              }}>
+            <View style={styles.billAmountContainer}>
               <Text style={[styles.labelText]}>Bill Amount</Text>
               <Text style={styles.actualTextStyle}>₹ {bill.billAmount}</Text>
             </View>
           </View>
-          {bill.remark != null && (
-            <View
-              style={{
-                borderWidth: 0.5,
-                marginTop: 5,
-                borderColor: '#eee',
-              }}
-            />
-          )}
+          {bill.remark != null && <View style={styles.remarkSeparatorLine} />}
           {bill.remark != null && (
             <View style={{marginTop: 10}}>
-              <Text
-                style={{
-                  fontStyle: 'italic',
-                  fontSize: 13,
-                }}>
+              <Text style={styles.remarkTextStyle}>
                 Remark:<Text> {bill.remark}</Text>
               </Text>
             </View>
           )}
         </View>
         {bill.paidDates.length != 0 && (
-          <View
-            style={{
-              marginHorizontal: 20,
-              backgroundColor: '#eee',
-              padding: 10,
-              borderRadius: 50,
-              // overflow: 'hidden',
-            }}>
+          <View style={styles.showPreviosPaymentButton}>
             <TouchableNativeFeedback
               style={{flex: 1}}
               // background={TouchableNativeFeedback.Ripple('#000', true)}
@@ -279,7 +247,7 @@ const BillInDetail = ({
         )}
       </ScrollView>
 
-      {!showDone && bill.isPaid === false && !callFromPaid && (
+      {!showDone && bill.isPaid === false && !callFromPaid ? (
         <View
           style={{
             padding: 10,
@@ -305,9 +273,26 @@ const BillInDetail = ({
             style={{borderRadius: 40, flex: 1, maxWidth: 200}}
           />
         </View>
+      ) : (
+        <Button
+          style={{
+            borderRadius: 40,
+            maxWidth: 250,
+            alignSelf: 'center',
+            marginBottom: 10,
+          }}
+          text="Mark as unpaid"
+          backgroundColor={Colors.lightTomato}
+          textColor={Colors.tomato}
+          onPress={unpayBill}
+        />
       )}
       {showPreviousHistory && (
-        <PreviousPaymentHistory data={item.paidDates} closeModal={closeModal} />
+        <PreviousPaymentHistory
+          item={item}
+          data={item.paidDates}
+          closeModal={closeModal}
+        />
       )}
     </View>
   );
@@ -356,6 +341,40 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     fontSize: 12,
+  },
+  rowAndCenter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  bottomBillDetails: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  billAmountContainer: {
+    paddingHorizontal: 15,
+    marginTop: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    borderRadius: 3,
+  },
+  remarkSeparatorLine: {
+    borderWidth: 0.5,
+    marginTop: 5,
+    borderColor: '#eee',
+  },
+  remarkTextStyle: {
+    fontStyle: 'italic',
+    fontSize: 13,
+  },
+  showPreviosPaymentButton: {
+    marginHorizontal: 20,
+    backgroundColor: '#eee',
+    padding: 10,
+    borderRadius: 50,
   },
 });
 export default BillInDetail;

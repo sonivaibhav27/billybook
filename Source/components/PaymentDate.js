@@ -18,7 +18,6 @@ const PaymentDate = ({
   remainingBalance,
   lastPaidDates,
 }) => {
-  console.log(lastPaidDates);
   return (
     <View
       style={{
@@ -98,22 +97,24 @@ const PaymentDate = ({
           </View>
         </View>
         <View style={{marginTop: 20}}>
-          {remainingBalance != totalAmount && lastPaidDates != null && (
-            <View>
-              <Text
-                style={{
-                  fontFamily: 'OpenSans-Bold',
-                  color: 'rgba(0, 171, 102, 1)',
-                  textAlign: 'center',
-                }}>
-                Last Paid -{' '}
-                {moment(
-                  lastPaidDates[lastPaidDates.length - 1].date,
-                  'YYYYMMDD',
-                ).format('DD/MM/YYYY')}
-              </Text>
-            </View>
-          )}
+          {remainingBalance != totalAmount &&
+            lastPaidDates != null &&
+            lastPaidDates.length >= 1 && (
+              <View>
+                <Text
+                  style={{
+                    fontFamily: 'OpenSans-Bold',
+                    color: 'rgba(0, 171, 102, 1)',
+                    textAlign: 'center',
+                  }}>
+                  Last Paid -{' '}
+                  {moment(
+                    lastPaidDates[lastPaidDates.length - 1].date,
+                    'YYYYMMDD',
+                  ).format('DD/MM/YYYY')}
+                </Text>
+              </View>
+            )}
           <View
             style={{
               flexDirection: 'row',

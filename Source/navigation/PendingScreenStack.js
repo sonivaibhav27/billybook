@@ -11,9 +11,7 @@ import {
 } from '../components/navigationTypes';
 import {
   BillInDetail,
-  CreateBillScreen,
   PendingBillNew,
-  PendingBillScreen,
   SearchBillScreen,
   Settings,
 } from '../Screens';
@@ -36,8 +34,12 @@ const PendingScreenStack = () => (
         component={PendingBillNew}
       />
       <Screen
-        options={{
-          headerShown: false,
+        options={({route}) => {
+          console.log(route.params.title);
+          return {
+            headerShown: false,
+            headerTitle: route.params.title,
+          };
         }}
         name={ADD_NEW_BILL}
         component={CreateDummy}

@@ -40,39 +40,33 @@ const Flat = ({data, loading}) => {
       },
     ]);
   }, []);
+  const listEmpty = () => {
+    if (!loading) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 60,
+          }}>
+          <Text style={{fontSize: 24}}>No Bills Here.</Text>
+        </View>
+      );
+    }
+    return null;
+  };
+  const renderCard = ({item, index}) => {
+    return <NewCard key={index.toString()} isPaid item={item} />;
+  };
   return (
     <FlatList
       style={{marginTop: 10}}
       maxToRenderPerBatch={10}
       keyExtractor={(item, index) => index.toString()}
       data={data}
-      ListEmptyComponent={() => {
-        if (!loading) {
-          return (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 60,
-              }}>
-              <Text style={{fontSize: 24}}>No Bills Here.</Text>
-            </View>
-          );
-        }
-        return null;
-      }}
-      renderItem={({item, index}) => {
-        return (
-          // <Card
-          //   key={index}
-          //   item={item}
-          //   isCallFromPaidScreen
-          //   deleteBill={deleteBill}
-          // />
-          <NewCard key={index.toString()} isPaid item={item} />
-        );
-      }}
+      ListEmptyComponent={listEmpty}
+      renderItem={renderCard}
     />
   );
 };
@@ -95,37 +89,43 @@ export default class PaidScreen extends Component {
     };
   }
   componentDidMount() {
-    this._call();
+    this.callback();
+    this._unsubscribeNavigation = this.props.navigation.addListener(
+      'focus',
+      this.callback,
+    );
   }
-  _call = () => {
-    const a = paidBills(0, BillSchema);
-    console.log(a);
-    this.setState({loading: false, data: a});
-  };
+  componentWillUnmount() {
+    clearTimeout(this._timeout);
+    this._unsubscribeNavigation();
+  }
 
   callback = async () => {
-    this.setState({loading: true, data: []});
+    this.setState({loading: true});
+    let _data = [];
     const {filteredBillName} = this.state;
     if (filteredBillName === data[0]) {
-      const a = await paidBills(0, BillSchema);
-      this.setState({loading: false, data: a});
-    }
-    if (filteredBillName === data[1]) {
-      const a = await paidBills(1, BillSchema);
-      this.setState({loading: false, data: a});
+      _data = await paidBills(0, BillSchema);
+    } else if (filteredBillName === data[1]) {
+      _data = await paidBills(1, BillSchema);
     } else if (filteredBillName === data[2]) {
-      const b = await paidBills(15, BillSchema, true);
-      this.setState({loading: false, data: b});
+      _data = await paidBills(15, BillSchema, true);
     } else if (filteredBillName === data[3]) {
-      const c = await paidBills(30, BillSchema, true);
-      this.setState({loading: false, data: c});
+      _data = await paidBills(30, BillSchema, true);
     } else if (filteredBillName === data[4]) {
       this.setState({
         dateOpen: true,
         loading: false,
       });
     }
+    if (data.length !== 0) {
+      this.setState({data: _data});
+    }
+    this._timeout = setTimeout(() => {
+      this.setState({loading: false});
+    }, 5);
   };
+
   openFilteredModal = () => {
     this.setState({openModalState: true, dateOpen: false});
   };
@@ -134,13 +134,13 @@ export default class PaidScreen extends Component {
     this.setState({openModalState: false});
   };
   setType = item => {
-    this.setState({openModalState: false});
+    // this.setState({openModalState: false});
     if (item !== this.state.filteredBillName) {
       this.setState({showFromAndToDates: false});
       if (item === data[4]) {
         this.setState({showFromAndToDates: true});
       }
-      this.setState({filteredBillName: item}, () => this.callback());
+      this.setState({filteredBillName: item}, async () => this.callback());
     }
   };
   clearToDate = () => {
@@ -156,6 +156,31 @@ export default class PaidScreen extends Component {
       loading: false,
     });
   };
+
+  fromDateBlockCalled = () => {
+    this.setState({dateOpen: true, isFromCalled: true});
+  };
+  toDateBlockCalled = () => {
+    this.setState({dateOpen: true, isFromCalled: false});
+  };
+
+  onDateChanged = (s, e) => {
+    const {fromDate, isFromCalled} = this.state;
+    if ((!fromDate.isSet || isFromCalled) && s.type !== 'dismissed') {
+      this.setState({
+        fromDate: {
+          date: e,
+          isSet: true,
+        },
+        dateOpen: false,
+      });
+    } else if (fromDate.isSet && s.type !== 'dismissed' && !isFromCalled) {
+      this.setState({
+        toDate: e,
+        dateOpen: false,
+      });
+    }
+  };
   render() {
     const {
       filteredBillName,
@@ -167,11 +192,7 @@ export default class PaidScreen extends Component {
       toDate,
     } = this.state;
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: Colors.backgroundColor,
-        }}>
+      <View style={styles.container}>
         <Header headerText="Paid Bills" isBackable />
         {openModalState && (
           <View style={styles.modalContainer}>
@@ -197,28 +218,20 @@ export default class PaidScreen extends Component {
             />
           </TouchableOpacity>
           {showFromAndToDates && (
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-evenly',
-                marginTop: 10,
-                alignItems: 'center',
-              }}>
+            <View style={styles.fromAndToDateContainer}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => {
-                  this.setState({dateOpen: true, isFromCalled: true});
-                }}
-                style={{
-                  backgroundColor: fromDate.isSet ? '#444' : '#EEE',
-                  padding: 10,
-                  borderRadius: 50,
-                  // borderBottomWidth: 1,
-                  borderColor: Colors.primary,
-                }}>
+                onPress={this.fromDateBlockCalled}
+                style={[
+                  styles.dateBlockContainer,
+                  {
+                    borderWidth: fromDate.isSet ? 1 : 0,
+                    borderColor: '#666',
+                  },
+                ]}>
                 <Text
                   style={{
-                    color: fromDate.isSet ? '#fff' : '#111',
+                    color: fromDate.isSet ? '#000' : '#111',
                     fontSize: 12,
                     marginRight: 5,
                   }}>
@@ -235,15 +248,13 @@ export default class PaidScreen extends Component {
                   )}
                 </Text>
               </TouchableOpacity>
-              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <View style={styles.rowAndCenter}>
                 <TouchableOpacity
                   activeOpacity={0.9}
                   disabled={!fromDate.isSet}
-                  onPress={() => {
-                    this.setState({dateOpen: true, isFromCalled: false});
-                  }}
+                  onPress={this.toDateBlockCalled}
                   style={{
-                    backgroundColor: toDate !== null ? '#444' : '#EEE',
+                    backgroundColor: '#EEE',
                     padding: 10,
                     borderRadius: 50,
                     flexDirection: 'row',
@@ -287,31 +298,17 @@ export default class PaidScreen extends Component {
               </View>
             </View>
           )}
-          <Flat loading={this.state.loading} data={this.state.data} />
         </View>
-        {this.state.loading && <LoadingIndicator />}
+        {!this.state.loading ? (
+          <Flat loading={this.state.loading} data={this.state.data} />
+        ) : (
+          <View style={StyleSheet.absoluteFill}>
+            <LoadingIndicator />
+          </View>
+        )}
         {dateOpen && (
           <DatePicker
-            onChange={(s, e) => {
-              if ((!fromDate.isSet || isFromCalled) && s.type !== 'dismissed') {
-                this.setState({
-                  fromDate: {
-                    date: e,
-                    isSet: true,
-                  },
-                  dateOpen: false,
-                });
-              } else if (
-                fromDate.isSet &&
-                s.type !== 'dismissed' &&
-                !isFromCalled
-              ) {
-                this.setState({
-                  toDate: e,
-                  dateOpen: false,
-                });
-              }
-            }}
+            onChange={this.onDateChanged}
             minimumDate={
               fromDate.isSet && !isFromCalled
                 ? fromDate.date
@@ -326,6 +323,10 @@ export default class PaidScreen extends Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.backgroundColor,
+  },
   selectedFilterContainer: {
     backgroundColor: '#222',
     alignSelf: 'center',
@@ -368,5 +369,18 @@ const styles = StyleSheet.create({
   },
   goText: {
     color: '#fff',
+  },
+  fromAndToDateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  rowAndCenter: {flexDirection: 'row', alignItems: 'center'},
+  dateBlockContainer: {
+    backgroundColor: '#EEE',
+    padding: 10,
+    borderRadius: 50,
+    borderColor: Colors.primary,
   },
 });

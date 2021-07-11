@@ -5,19 +5,22 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
-  ScrollView,
   TouchableNativeFeedback,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
-
 import moment from 'moment';
+import BillSchema from '../DB/NewSch';
 import {Easing} from 'react-native-reanimated';
+import {AntDesign} from '../components/Icons';
+import {DeleteLastPayment} from '../databases/realm.helper';
 const {height} = Dimensions.get('window');
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const MODAL_HEIGHT = height * 0.8;
-const PreviousPaymentHistory = ({closeModal, data}) => {
+const PreviousPaymentHistory = ({closeModal, data, item}) => {
+  const [reload, setReload] = React.useState(false);
   const _mount = React.useRef(new Animated.Value(0)).current;
   React.useState(() => {
     Animated.timing(_mount, {
@@ -36,6 +39,44 @@ const PreviousPaymentHistory = ({closeModal, data}) => {
     }).start(() => {
       closeModal();
     });
+  };
+
+  const deleteLastPayment = () => {
+    DeleteLastPayment(BillSchema, item);
+    setReload(true);
+  };
+
+  const renderPreviousPayment = ({item: bill, index}) => {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 10,
+          marginBottom: 8,
+        }}>
+        <View>
+          <Text style={[styles.actualTextStyle, {color: '#000'}]}>
+            {moment(bill.date, 'YYYYMMDD').format('DD/MM/YYYY')}
+          </Text>
+        </View>
+        <View style={styles.horizontal}>
+          <Text
+            style={[styles.actualTextStyle, {color: 'rgba(0, 171, 102, 1)'}]}>
+            ${bill.amount}
+          </Text>
+          {index === data.length - 1 ? (
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={deleteLastPayment}
+              style={styles.delete}>
+              <AntDesign name="delete" color="#000" size={20} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+    );
   };
   return (
     <AnimatedTouchable
@@ -91,39 +132,12 @@ const PreviousPaymentHistory = ({closeModal, data}) => {
             Previous payment
           </Text>
         </View>
-        <ScrollView style={{flex: 1}}>
-          <View onStartShouldSetResponder={() => true}>
-            {data.map((bill, index) => {
-              return (
-                <View
-                  onStartShouldSetResponder={() => true}
-                  key={index.toString()}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginBottom: 8,
-                  }}>
-                  <View>
-                    <Text style={[styles.actualTextStyle, {color: '#000'}]}>
-                      {moment(bill.date, 'YYYYMMDD').format('DD/MM/YYYY')}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={[
-                        styles.actualTextStyle,
-                        {color: 'rgba(0, 171, 102, 1)'},
-                      ]}>
-                      ${bill.amount}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </ScrollView>
+
+        <FlatList
+          data={data}
+          renderItem={renderPreviousPayment}
+          keyExtractor={(_, index) => index.toString()}
+        />
 
         <View
           style={{
@@ -154,5 +168,12 @@ const styles = StyleSheet.create({
   actualTextStyle: {
     fontFamily: 'OpenSans-SemiBold',
     fontSize: 20,
+  },
+  horizontal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  delete: {
+    marginLeft: 5,
   },
 });

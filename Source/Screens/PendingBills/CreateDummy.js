@@ -1,121 +1,86 @@
 import * as React from 'react';
 import {
   Keyboard,
-  NativeModules,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
   Text,
   TextInput,
-  Alert,
   ToastAndroid,
 } from 'react-native';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
-import {createBillInDatabase} from '../../databases/realm.helper';
+import {createBillInDatabase, modifyBill} from '../../databases/realm.helper';
 import DatePicker from '@react-native-community/datetimepicker';
 import {Colors} from '../../components/Color';
 import {Entypo} from '../../components/Icons';
 import FormComponent from '../../components/Form';
 import Header from '../../components/Header';
 import Button from '../../components/Button';
-// import Animated, {
-//   Easing,
-//   interpolate,
-//   useAnimatedStyle,
-//   useSharedValue,
-//   withTiming,
-// } from 'react-native-reanimated';
-import {saveToDatabase} from '../../databases/helper';
 import BillSchema from '../../DB/NewSch';
-import {normalize} from '../../components/TextSize';
 import TypeModal from '../../components/TypeModal';
 import LoadingIndicator from '../../components/LoadingIndicator';
-const nativeModule = NativeModules.MoneyFormat;
-export default () => {
-  const [billName, setBillName] = React.useState('');
-  const [billAmount, setBillAmount] = React.useState('');
-  const [billType, setBillType] = React.useState('Others');
-  const [billDue, setBillDue] = React.useState(new Date(Date.now()));
+export default ({route}) => {
+  const {bill} = route.params;
+  console.log('[Bill]', bill);
+  const [billName, setBillName] = React.useState(!!bill ? bill.billName : '');
+  const [billAmount, setBillAmount] = React.useState(
+    !!bill ? `${bill.billAmount}` : '',
+  );
+  const [billType, setBillType] = React.useState(!!bill ? bill.type : 'Others');
+  const [billDue, setBillDue] = React.useState(
+    !!bill ? moment(bill.due, 'YYYYMMDD') : new Date(Date.now()),
+  );
   const [datePicker, setDatePicker] = React.useState(false);
-  const [billRemark, setBillRemark] = React.useState('');
+  const [billRemark, setBillRemark] = React.useState(!!bill ? bill.remark : '');
   const [startCreatingBills, setStartCreatingBills] = React.useState(false);
   const [isCheckBoxChecked, setIsCheckBoxChecked] = React.useState(false);
   const [selectedRepeat, setSelectedRepeat] = React.useState('days');
   const [openModal, setOpenModal] = React.useState(false);
   const [frequencyForHowManyTimes, setFrequencyForHowManyTimes] =
     React.useState('');
-  // const _keyBoardSharedValue = useSharedValue(0);
-
-  React.useEffect(() => {
-    const removeShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      // _keyBoardSharedValue.value = withTiming(1, {
-      //   duration: 200,
-      //   easing: Easing.inOut(Easing.ease),
-      // });
-    });
-    const removeHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      // _keyBoardSharedValue.value = withTiming(0, {
-      //   duration: 200,
-      //   easing: Easing.inOut(Easing.ease),
-      // });
-    });
-
-    return () => {
-      removeHideListener.remove();
-      removeShowListener.remove();
-    };
-  }, []);
-
-  // const buttonAnimatedStyle = useAnimatedStyle(() => {
-  //   return {
-  //     transform: [
-  //       {
-  //         translateY: interpolate(
-  //           _keyBoardSharedValue.value,
-  //           [0, 1],
-  //           [0, btnHeight],
-  //         ),
-  //       },
-  //     ],
-  //   };
-
-  // });
 
   const createBill = () => {
+    if (route.params.title === 'Edit Bill') {
+      modifyBill(BillSchema, bill, {
+        name: billName,
+      });
+    } else {
+      alert('Create Bill');
+    }
     console.log(billAmount, billName, billType, billDue);
 
     // saveToDatabase(billName, Number(billAmount), billDue, billRemark, billType);
     // this.setState({showAnimation: false});
-    if (!billAmount || !billName || !billType || !billDue) {
-      ToastAndroid.showWithGravityAndOffset(
-        'Please fill the required field',
-        ToastAndroid.LONG,
-        ToastAndroid.BOTTOM,
-        0,
-        100,
-      );
-      return;
-    }
-    setStartCreatingBills(true);
-    createBillInDatabase(
-      billName,
-      billAmount,
-      billDue,
-      billRemark,
-      billType,
-      {count: 20},
-      BillSchema,
-    ).then(() => {
-      setStartCreatingBills(false);
-      alert('Done');
-    });
+    // if (!billAmount || !billName || !billType || !billDue) {
+    //   ToastAndroid.showWithGravityAndOffset(
+    //     'Please fill the required field',
+    //     ToastAndroid.LONG,
+    //     ToastAndroid.BOTTOM,
+    //     0,
+    //     100,
+    //   );
+    //   return;
+    // }
+    // setStartCreatingBills(true);
+    // createBillInDatabase(
+    //   billName,
+    //   billAmount,
+    //   billDue,
+    //   billRemark,
+    //   billType,
+    //   {count: 20},
+    //   BillSchema,
+    // ).then(() => {
+    //   setStartCreatingBills(false);
+    //   alert('Done');
+    // });
   };
 
   const setType = React.useCallback(item => {
     setBillType(item);
-  });
+  }, []);
 
   const onCheckBoxPress = () => {
     setIsCheckBoxChecked(checkbox => !checkbox);
@@ -123,7 +88,7 @@ export default () => {
 
   return (
     <View style={styles.container}>
-      <Header headerText="Create Bill" isBackable />
+      <Header headerText={route.params.title} isBackable />
 
       <ScrollView style={styles.scrollContainer}>
         {/* Bill Name */}
@@ -371,7 +336,7 @@ export default () => {
           onPress={createBill}
           backgroundColor={Colors.primary}
           textColor={'#fff'}
-          text="Create Bill"
+          text={route.params.title}
           containerStyle={{width: 250, alignSelf: 'center'}}
         />
       </View>
@@ -381,10 +346,7 @@ export default () => {
             setOpenModal(false);
           }}
           setType={setType}
-          style={{
-            top: 20,
-            bottom: 20,
-          }}
+          style={styles.typeModalStyle}
         />
       )}
       {startCreatingBills && (
@@ -425,5 +387,9 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 14,
     color: '#333',
+  },
+  typeModalStyle: {
+    top: 20,
+    bottom: 20,
   },
 });
