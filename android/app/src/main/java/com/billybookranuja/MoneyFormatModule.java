@@ -7,7 +7,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
-
+import android.os.Build;
 import androidx.annotation.NonNull;
 
 import java.io.File;
@@ -50,6 +50,10 @@ public class MoneyFormatModule extends ReactContextBaseJavaModule {
     }
 
 
+    @ReactMethod
+    public void getDeviceBrand(Callback c){
+        c.invoke(Build.BRAND);
+    }
     @ReactMethod
     public void generatePopup(String message){
         // Toast toast = new Toast(mContext);

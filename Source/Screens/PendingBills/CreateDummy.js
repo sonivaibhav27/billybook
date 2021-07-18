@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-  Keyboard,
+  Switch,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
-import {createBillInDatabase, modifyBill} from '../../databases/realm.helper';
+import {modifyBill} from '../../databases/realm.helper';
 import DatePicker from '@react-native-community/datetimepicker';
 import {Colors} from '../../components/Color';
 import {Entypo} from '../../components/Icons';
@@ -37,6 +37,7 @@ export default ({route}) => {
   const [startCreatingBills, setStartCreatingBills] = React.useState(false);
   const [isCheckBoxChecked, setIsCheckBoxChecked] = React.useState(false);
   const [selectedRepeat, setSelectedRepeat] = React.useState('days');
+  const [billNotification, setBillNotification] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);
   const [frequencyForHowManyTimes, setFrequencyForHowManyTimes] =
     React.useState('');
@@ -84,6 +85,10 @@ export default ({route}) => {
 
   const onCheckBoxPress = () => {
     setIsCheckBoxChecked(checkbox => !checkbox);
+  };
+
+  const onSwitchValueChange = newValue => {
+    setBillNotification(newValue);
   };
 
   return (
@@ -140,6 +145,30 @@ export default ({route}) => {
           }}
           isCompulsoryField
         />
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={onSwitchValueChange}
+          style={{
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexDirection: 'row',
+            marginHorizontal: 20,
+            paddingVertical: 10,
+          }}>
+          <Text
+            style={{
+              fontFamily: 'OpenSans-Regular',
+            }}>
+            Notify ?{' '}
+          </Text>
+          <Switch
+            value={billNotification}
+            onValueChange={onSwitchValueChange}
+            thumbColor={Colors.primary}
+            trackColor={Colors.primary}
+            style={{width: 100}}
+          />
+        </TouchableOpacity>
         <TouchableOpacity
           hitSlop={{
             left: 10,
@@ -209,6 +238,7 @@ export default ({route}) => {
                   borderColor: '#eee',
                 }}
               />
+
               <View
                 style={{
                   flexDirection: 'row',
@@ -216,7 +246,7 @@ export default ({route}) => {
                   justifyContent: 'space-between',
                 }}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Text style={{}}>Every</Text>
+                  <Text>Every</Text>
                   <TextInput
                     textAlignVertical="top"
                     keyboardType="number-pad"

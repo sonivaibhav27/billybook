@@ -8,6 +8,7 @@ import {
   TouchableNativeFeedback,
   TouchableOpacity,
   FlatList,
+  InteractionManager,
 } from 'react-native';
 import moment from 'moment';
 import BillSchema from '../DB/NewSch';
@@ -20,15 +21,21 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const MODAL_HEIGHT = height * 0.8;
 const PreviousPaymentHistory = ({closeModal, data, item}) => {
-  const [reload, setReload] = React.useState(false);
+  const [renderToHardwareTextureAndroid, setRenderToHardwareTextureAndroid] =
+    React.useState(true);
   const _mount = React.useRef(new Animated.Value(0)).current;
-  React.useState(() => {
+
+  React.useEffect(() => {
     Animated.timing(_mount, {
       toValue: 1,
       easing: Easing.linear,
       duration: 250,
       useNativeDriver: true,
     }).start();
+    const interaction = InteractionManager.runAfterInteractions(() => {
+      console.log('Interaction Done');
+      setRenderToHardwareTextureAndroid(false);
+    });
   }, []);
   const _onCloseModal = () => {
     Animated.timing(_mount, {
@@ -78,88 +85,91 @@ const PreviousPaymentHistory = ({closeModal, data, item}) => {
       </View>
     );
   };
+
   return (
-    <AnimatedTouchable
-      style={{
-        ...StyleSheet.absoluteFill,
-        opacity: _mount.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.4, 1],
-          extrapolate: 'clamp',
-        }),
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        zIndex: 1000,
-      }}
-      activeOpacity={1}
-      onPress={_onCloseModal}>
+    <View style={StyleSheet.absoluteFill}>
       <AnimatedTouchable
-        activeOpacity={1}
         style={{
-          marginTop: 0,
-          backgroundColor: '#fff',
-          paddingHorizontal: 13,
-          position: 'absolute',
-          right: 0,
-          bottom: 0,
-          left: 0,
-          borderTopStartRadius: 20,
-          borderTopEndRadius: 20,
-          maxHeight: MODAL_HEIGHT,
-          transform: [
-            {
-              translateY: _mount.interpolate({
-                inputRange: [0, 1],
-                outputRange: [MODAL_HEIGHT, 0],
-                extrapolate: 'clamp',
-              }),
-            },
-          ],
-        }}>
-        <View
+          flex: 1,
+          opacity: _mount.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.4, 1],
+            extrapolate: 'clamp',
+          }),
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          zIndex: 1000,
+        }}
+        activeOpacity={1}
+        onPress={_onCloseModal}>
+        <AnimatedTouchable
+          activeOpacity={1}
           style={{
-            marginBottom: 10,
-            marginTop: 10,
-            padding: 10,
-            borderBottomWidth: 1,
-            borderColor: '#eee',
+            marginTop: 0,
+            backgroundColor: '#fff',
+            paddingHorizontal: 13,
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            left: 0,
+            borderTopStartRadius: 20,
+            borderTopEndRadius: 20,
+            maxHeight: MODAL_HEIGHT,
+            transform: [
+              {
+                translateY: _mount.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [MODAL_HEIGHT, 0],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
           }}>
-          <Text
+          <View
             style={{
-              textAlign: 'center',
-              fontSize: 18,
-              fontFamily: 'OpenSans-Bold',
+              marginBottom: 10,
+              marginTop: 10,
+              padding: 10,
+              borderBottomWidth: 1,
+              borderColor: '#eee',
             }}>
-            Previous payment
-          </Text>
-        </View>
-
-        <FlatList
-          data={data}
-          renderItem={renderPreviousPayment}
-          keyExtractor={(_, index) => index.toString()}
-        />
-
-        <View
-          style={{
-            backgroundColor: '#eee',
-            padding: 10,
-            borderRadius: 50,
-            marginBottom: 5,
-          }}>
-          <TouchableNativeFeedback onPress={_onCloseModal}>
             <Text
               style={{
-                color: '#222',
-                fontWeight: '600',
                 textAlign: 'center',
                 fontSize: 18,
+                fontFamily: 'OpenSans-Bold',
               }}>
-              close
+              Previous payment
             </Text>
-          </TouchableNativeFeedback>
-        </View>
+          </View>
+
+          <FlatList
+            data={data}
+            renderItem={renderPreviousPayment}
+            keyExtractor={(_, index) => index.toString()}
+          />
+
+          <View
+            style={{
+              backgroundColor: '#eee',
+              padding: 10,
+              borderRadius: 50,
+              marginBottom: 5,
+            }}>
+            <TouchableNativeFeedback onPress={_onCloseModal}>
+              <Text
+                style={{
+                  color: '#222',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  fontSize: 18,
+                }}>
+                close
+              </Text>
+            </TouchableNativeFeedback>
+          </View>
+        </AnimatedTouchable>
       </AnimatedTouchable>
-    </AnimatedTouchable>
+    </View>
   );
 };
 export default React.memo(PreviousPaymentHistory);

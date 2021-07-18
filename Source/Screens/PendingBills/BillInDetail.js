@@ -25,6 +25,7 @@ import {
   UnPayBill,
 } from '../../databases/realm.helper';
 import BillSchema from '../../DB/NewSch';
+import ModalUnPaidBill from '../../components/Model.billunpaid';
 UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const getFormateDate = momentObject => {
@@ -105,7 +106,8 @@ const BillInDetail = ({
     // alert(isPaid);
     payBillHelper(item, BillSchema, date, fullOrExactAmount, isPaid, () => {
       setDate(moment().format('MMMM D, YYYY'));
-      setSelected('Today');
+      setRemainingBalance(remainingBalance);
+      setAmount('');
     });
     ToastAndroid.showWithGravityAndOffset(
       'Mark as paid',
@@ -123,7 +125,7 @@ const BillInDetail = ({
       item.paidDates.forEach(particularBill => {
         remainingBalance += particularBill.amount;
       });
-      setRemainingBalance(remainingBalance);
+      setRemainingBalance(item.billAmount - remainingBalance);
     }
   }, [item.paidDates]);
 
@@ -152,14 +154,13 @@ const BillInDetail = ({
       item.paidDates.forEach(particularBill => {
         remainingBalance += particularBill.amount;
       });
-      setRemainingBalance(remainingBalance);
+      setRemainingBalance(item.billAmount - remainingBalance);
     }
   }, [item.paidDates]);
 
   const bill = new ParticularBillClass(item);
   const unpayBill = () => {
-    UnPayBill(BillSchema, item);
-    navigation.pop();
+    //give two options Delete Last Paid , or Full Unpaid
   };
   return (
     <View style={styles.container}>
@@ -232,7 +233,7 @@ const BillInDetail = ({
 
         {!callFromPaid && bill.isPaid === false && (
           <PaymentDate
-            remainingBalance={item.billAmount - remainingBalance}
+            remainingBalance={remainingBalance}
             selectedDate={selected}
             onDateSelection={selectDate}
             userSelectedDate={date}
@@ -294,6 +295,8 @@ const BillInDetail = ({
           closeModal={closeModal}
         />
       )}
+
+      <ModalUnPaidBill />
     </View>
   );
 };
