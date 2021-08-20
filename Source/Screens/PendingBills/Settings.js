@@ -37,7 +37,7 @@ const RowItem = ({title, onPress = () => {}, userPrefer}) => {
           onPress={onPress}
           activeOpacity={1}>
           <Text style={styles.rowText}>Default {title}</Text>
-          <Text style={[styles.rowText]}>{userPrefer} ></Text>
+          <Text style={[styles.rowText]}>{userPrefer}</Text>
         </TouchableOpacity>
       </View>
     </View>

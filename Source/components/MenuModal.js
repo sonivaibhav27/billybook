@@ -86,9 +86,7 @@ const MenuModal = ({closeMenuModal}) => {
         <PressableButton borderless={false} onPress={navigateToSettingsScreen}>
           <Item item="Setting" />
         </PressableButton>
-        <PressableButton borderless={false} onPress={closeMenu}>
-          <Item item="Close" />
-        </PressableButton>
+        
       </Animated.View>
     </AnimatedTouchableButton>
   );
@@ -116,7 +114,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     elevation: 1,
     // elevation: 1,
-    borderRadius: 1,
+    borderRadius: 10,
   },
   textContainer: {
     padding: 8,

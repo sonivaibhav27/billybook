@@ -15,7 +15,6 @@ import OptimizedFlatlist from '../../components/OptimizedFlatlist';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Search = ({data, allData}) => {
-  React.useEffect(() => {}, []);
   const todayDate = Number(moment().format('YYYYMMDD'));
   const renderBills = ({item}) => {
     return <NewCard item={item} overdue={item.due < todayDate} />;
@@ -94,8 +93,8 @@ const SearchBillScreen = ({navigation}) => {
       ) : (
         <View style={styles.centerContent}>
           <Text style={styles.emptyBillText}>
-            No Bills Found for -{' '}
-            <Text style={{fontWeight: '700', fontSize: 18}}>{searchText}</Text>
+            No Bills Found  
+           {searchText.length ? <Text style={{fontWeight: '700', fontSize: 18}}> for - {searchText}</Text> : null}
           </Text>
         </View>
       )}

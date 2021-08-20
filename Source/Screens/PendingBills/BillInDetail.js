@@ -121,6 +121,7 @@ const BillInDetail = ({
   const closeModal = React.useCallback(() => {
     setShowPreviousHistory(false);
     if (item.paidDates.length >= 0) {
+      
       let remainingBalance = 0;
       item.paidDates.forEach(particularBill => {
         remainingBalance += particularBill.amount;
@@ -155,6 +156,9 @@ const BillInDetail = ({
         remainingBalance += particularBill.amount;
       });
       setRemainingBalance(item.billAmount - remainingBalance);
+    }
+    else{
+      
     }
   }, [item.paidDates]);
 
@@ -237,7 +241,7 @@ const BillInDetail = ({
             selectedDate={selected}
             onDateSelection={selectDate}
             userSelectedDate={date}
-            totalAmount={item.billAmount}
+            totalAmount={bill.billAmount}
             openDateModal={isOpen}
             onModalDateSelection={onModalDateSelection}
             payFullAmount={payFullAmount}
@@ -296,7 +300,7 @@ const BillInDetail = ({
         />
       )}
 
-      <ModalUnPaidBill />
+     {false && <ModalUnPaidBill />}
     </View>
   );
 };

@@ -8,10 +8,11 @@ import {
   Text,
   TextInput,
   ToastAndroid,
+  Keyboard,
 } from 'react-native';
 import moment from 'moment';
 import {Picker} from '@react-native-picker/picker';
-import {modifyBill} from '../../databases/realm.helper';
+import {createBillInDatabase, modifyBill} from '../../databases/realm.helper';
 import DatePicker from '@react-native-community/datetimepicker';
 import {Colors} from '../../components/Color';
 import {Entypo} from '../../components/Icons';
@@ -48,7 +49,18 @@ export default ({route}) => {
         name: billName,
       });
     } else {
-      alert('Create Bill');
+      setStartCreatingBills(true);
+      createBillInDatabase(
+        billName,
+        billAmount,
+        billDue,
+        billRemark,
+        billType,
+        {count: 20},
+        BillSchema,
+      ).then(() => {
+        setStartCreatingBills(false);
+      });
     }
     console.log(billAmount, billName, billType, billDue);
 
@@ -64,19 +76,7 @@ export default ({route}) => {
     //   );
     //   return;
     // }
-    // setStartCreatingBills(true);
-    // createBillInDatabase(
-    //   billName,
-    //   billAmount,
-    //   billDue,
-    //   billRemark,
-    //   billType,
-    //   {count: 20},
-    //   BillSchema,
-    // ).then(() => {
-    //   setStartCreatingBills(false);
-    //   alert('Done');
-    // });
+ 
   };
 
   const setType = React.useCallback(item => {
@@ -116,6 +116,7 @@ export default ({route}) => {
           label="Type"
           isCompulsoryField
           onPress={() => {
+            Keyboard.dismiss();
             setOpenModal(open => !open);
           }}
         />

@@ -66,8 +66,9 @@ export const createBillInDatabase = (
   const id = new UUID().toHexString();
   return new Promise((resolve, reject) => {
     realmInstance.write(() => {
+      let bill;
       for (let i = 0; i < repeat.count; i++) {
-        const bill = realmInstance.create('Billl', {
+         bill = realmInstance.create('Billl', {
           _id: id,
           billName,
           billAmount: Number(billAmount),
@@ -76,7 +77,7 @@ export const createBillInDatabase = (
           remark,
         });
       }
-
+      console.log("Bills Created ",bill)
       resolve();
     });
   });

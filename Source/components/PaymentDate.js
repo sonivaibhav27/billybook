@@ -133,7 +133,7 @@ const PaymentDate = ({
                 fontFamily: 'OpenSans-SemiBold',
                 fontSize: 18,
               }}>
-              {remainingBalance != totalAmount
+              {remainingBalance != 0
                 ? remainingBalance
                 : amount.length == 0
                 ? totalAmount
