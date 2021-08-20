@@ -68,7 +68,7 @@ export const createBillInDatabase = (
     realmInstance.write(() => {
       let bill;
       for (let i = 0; i < repeat.count; i++) {
-         bill = realmInstance.create('Billl', {
+        bill = realmInstance.create('Billl', {
           _id: id,
           billName,
           billAmount: Number(billAmount),
@@ -77,7 +77,7 @@ export const createBillInDatabase = (
           remark,
         });
       }
-      console.log("Bills Created ",bill)
+      console.log('Bills Created ', bill);
       resolve();
     });
   });
@@ -144,10 +144,25 @@ export const payBillHelper = (item, schema, date, amount, isPaid, callback) => {
   callback();
 };
 
-export const deleteBill = (item, BillSchema, callback) => {
-  BillSchema.write(() => {
-    BillSchema.delete(item);
-  });
+export const deleteBill = (
+  item,
+  BillSchema,
+  deleteType: 'one' | 'all',
+  callback,
+) => {
+  if (deleteType === 'one') {
+    BillSchema.write(() => {
+      BillSchema.delete(item);
+    });
+  } else {
+    const bills = getAllDataFromRealm(BillSchema).filtered(
+      '_id == $0',
+      item._id,
+    );
+    BillSchema.write(() => {
+      BillSchema.delete(bills);
+    });
+  }
   callback();
 };
 

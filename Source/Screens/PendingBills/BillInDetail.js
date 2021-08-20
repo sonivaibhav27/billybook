@@ -26,6 +26,7 @@ import {
 } from '../../databases/realm.helper';
 import BillSchema from '../../DB/NewSch';
 import ModalUnPaidBill from '../../components/Model.billunpaid';
+import DeleteModel from '../../components/DeleteModal';
 UIManager.setLayoutAnimationEnabledExperimental(true);
 
 const getFormateDate = momentObject => {
@@ -43,7 +44,7 @@ const BillInDetail = ({
   const [date, setDate] = React.useState(getFormateDate(moment(today)));
   const [amount, setAmount] = React.useState('');
   const [showPreviousHistory, setShowPreviousHistory] = React.useState(false);
-  const [showDone, setShowDone] = React.useState(false);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [remainingBalance, setRemainingBalance] = React.useState(0);
 
   const toggleShowPayHistory = () => {
@@ -121,7 +122,6 @@ const BillInDetail = ({
   const closeModal = React.useCallback(() => {
     setShowPreviousHistory(false);
     if (item.paidDates.length >= 0) {
-      
       let remainingBalance = 0;
       item.paidDates.forEach(particularBill => {
         remainingBalance += particularBill.amount;
@@ -131,24 +131,21 @@ const BillInDetail = ({
   }, [item.paidDates]);
 
   const deleteBillHelper = () => {
-    Alert.alert(
-      'Delete bill?',
-      'Are you sure to delete the bill, this action is not reversible',
-      [
-        {
-          text: 'Cancel',
-        },
-        {
-          text: 'Yes',
-          onPress: () => {
-            deleteBill(item, BillSchema, () => {
-              navigation.pop();
-            });
-          },
-        },
-      ],
-    );
+    setShowDeleteModal(!showDeleteModal);
   };
+
+  const deleteThisBill = () => {
+    deleteBill(item, BillSchema, 'one', () => {
+      navigation.pop();
+    });
+  };
+
+  const deleteAllBill = () => {
+    deleteBill(item, BillSchema, 'all', () => {
+      navigation.pop();
+    });
+  };
+
   React.useEffect(() => {
     if (item.paidDates.length > 0) {
       let remainingBalance = 0;
@@ -156,9 +153,7 @@ const BillInDetail = ({
         remainingBalance += particularBill.amount;
       });
       setRemainingBalance(item.billAmount - remainingBalance);
-    }
-    else{
-      
+    } else {
     }
   }, [item.paidDates]);
 
@@ -252,7 +247,7 @@ const BillInDetail = ({
         )}
       </ScrollView>
 
-      {!showDone && bill.isPaid === false && !callFromPaid ? (
+      {bill.isPaid === false && !callFromPaid ? (
         <View
           style={{
             padding: 10,
@@ -300,7 +295,14 @@ const BillInDetail = ({
         />
       )}
 
-     {false && <ModalUnPaidBill />}
+      {false && <ModalUnPaidBill />}
+      {showDeleteModal && (
+        <DeleteModel
+          deleteThis={deleteThisBill}
+          deleteAll={deleteAllBill}
+          close={() => {}}
+        />
+      )}
     </View>
   );
 };

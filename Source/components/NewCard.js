@@ -14,8 +14,9 @@ import {ADD_NEW_BILL, BILL_IN_DETAIL} from './navigationTypes';
 import PressableButton from './PressableButton';
 import {deleteBill} from '../databases/realm.helper';
 import BillSchema from '../DB/NewSch';
+import {Colors} from './Color';
 
-const {width, height} = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 const nativeModule = NativeModules.MoneyFormat;
 const RowItem = React.memo(
@@ -109,6 +110,7 @@ class _NewCard extends React.Component {
 
   render() {
     const {item, overdue, isPaid} = this.props;
+    console.log(typeof item._id);
     return (
       <PressableButton
         disabled={isPaid}
@@ -161,7 +163,8 @@ class _NewCard extends React.Component {
                     ? '#EA5A72'
                     : item.paidDates.length != 0
                     ? '#ffb101'
-                    : '#2771C5',
+                    : // : '#2771C5',
+                      Colors.primary,
                 },
               ]}>
               <AntDesign color="#fff" size={20} name="arrowright" />
@@ -184,7 +187,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.2,
     borderColor: '#999',
     zIndex: -1,
-    height: height * 0.13,
+    // height: height * 0.13,
     justifyContent: 'space-between',
   },
   rowLabel: {

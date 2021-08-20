@@ -148,7 +148,7 @@ const PreviousPaymentHistory = ({closeModal, data, item}) => {
             keyExtractor={(_, index) => index.toString()}
           />
 
-          <View
+          {/* <View
             style={{
               backgroundColor: '#eee',
               padding: 10,
@@ -166,7 +166,7 @@ const PreviousPaymentHistory = ({closeModal, data, item}) => {
                 close
               </Text>
             </TouchableNativeFeedback>
-          </View>
+          </View> */}
         </AnimatedTouchable>
       </AnimatedTouchable>
     </View>

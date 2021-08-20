@@ -16,7 +16,7 @@ const Bill = {
     billAmount: 'int',
     due: {type: 'int', indexed: true},
     type: 'string',
-    paidOn: {type: 'int', optional:true},
+    paidOn: {type: 'int', optional: true},
     isPaid: {type: 'bool', default: false, indexed: true},
     paidDates: {
       type: 'list',
@@ -32,7 +32,7 @@ const Bill = {
 export default new Realm({
   path: 'helloworld.realm',
   schema: [Bill, Dates],
-  schemaVersion: 10,
+  schemaVersion: 11,
   migration: (oldRealm, newRealm) => {
     if (oldRealm.schemaVersion < 7) {
       const oldObjects = oldRealm.objects('Billl');

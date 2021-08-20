@@ -181,21 +181,19 @@ const ListOfBills = React.memo(
         await getBills();
       })();
       const unsubscribeFromNavigationEvent = navigation.addListener("focus",()=>{
-        alert("focus changed.")
-        getAllDataFromRealm(BillSchema).addListener(billChangeListener);
+        getAllDataFromRealm(BillSchema).addListener(billChangeListener)
       })
       return ()=>{
         clearTimeout(timeout?.current);
         unsubscribeFromNavigationEvent();
+        BillSchema.removeListener("change",billChangeListener)
       }
     }, [sortingType.technique, sortingType.type,navigation]);
   
     const billChangeListener = (_, changes) => {
-      alert("inside")
       if (changes.insertions.length != 0 || changes.modifications.length != 0) {
         getBills();
       } else if (changes.deletions.length != 0) {
-        // setLoading(true);
         getBills();
       }
     };
