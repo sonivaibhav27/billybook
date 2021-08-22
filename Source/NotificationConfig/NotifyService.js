@@ -9,6 +9,15 @@ class NotifyManager {
   clearNotifAndScheduleNotications() {
     this.clearAllDeliveredNotifications();
     this.checkForRepeatedSchedules();
+    this.createChannel(created => {
+      console.log(created);
+    });
+  }
+
+  makeOverdueBillNotification(noOfOverdueBill) {
+    this.createLocalNotification(
+      `You have ${noOfOverdueBill} bills that are overdue`,
+    );
   }
 
   configureNotifications() {
@@ -48,6 +57,7 @@ class NotifyManager {
 
   checkForRepeatedSchedules() {
     this.getScheduleNotification(notifications => {
+      console.log(notifications);
       notifications.map(notification => {
         if (notification.userData?.lastDate) {
           if (
@@ -60,17 +70,46 @@ class NotifyManager {
     });
   }
 
-  createLocalNotification(message, id) {
+  createLocalNotification(message) {
     PushNotification.localNotification({
       message,
       channelId: 'Bill',
-      id,
     });
   }
-  createScheduleNotification(userDevice, numberOfBills, repeatInterval) {
+
+  _createTimeStampArrayForNotification(
+    numberOfBills,
+    repeatInterval,
+    {hour, minutes},
+  ) {
+    const billInterval = [];
+    for (let i = 0; i < numberOfBills; i++) {
+      billInterval.push(
+        moment().add(i, repeatInterval).hour(hour).minute(minutes).toDate(),
+      );
+    }
+    console.log(billInterval[0].getHours());
+    return billInterval;
+  }
+
+  createScheduleNotification(
+    userDevice,
+    numberOfBills,
+    repeatInterval: 'month' | 'days' | 'year',
+    {userPreferHour, userPreferMinutes},
+  ) {
+    const billInterval = this._createTimeStampArrayForNotification(
+      numberOfBills,
+      repeatInterval,
+      {
+        userPreferHour,
+        userPreferMinutes,
+      },
+    );
+    if (!billInterval.length) return;
     if (userDevice.toLowerCase() === 'samsung') {
       this.getScheduleNotification(notification => {
-        if (notification.length <= 400) {
+        if (notification.length <= 450) {
           for (let i = 0; i < numberOfBills; i++) {
             PushNotification.localNotificationSchedule({
               message: 'Notification fired after 10sec.',
@@ -94,12 +133,14 @@ class NotifyManager {
       for (let i = 0; i < numberOfBills; i++) {
         PushNotification.localNotificationSchedule({
           message: 'Notification fired after 10sec.',
-          date: moment().add(),
-          id: 1,
+          date: billInterval[i],
           channelId: 'Bill',
         });
       }
     }
+    this.getScheduleNotification(notification => {
+      console.log(notification);
+    });
   }
 }
 

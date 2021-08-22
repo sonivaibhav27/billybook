@@ -92,8 +92,8 @@ const styles = StyleSheet.create({
   },
 
   labelText: {
-    fontSize: 13,
-    color: '#666',
+    fontSize: 11,
+    color: '#333',
     // fontFamily: 'Raleway-SemiBold',
     letterSpacing: 0.8,
     paddingVertical: 8,

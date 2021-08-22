@@ -300,7 +300,7 @@ const BillInDetail = ({
         <DeleteModel
           deleteThis={deleteThisBill}
           deleteAll={deleteAllBill}
-          close={() => {}}
+          close={deleteBillHelper}
         />
       )}
     </View>

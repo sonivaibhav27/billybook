@@ -8,19 +8,19 @@ import {
   TouchableNativeFeedback,
   Linking,
   NativeModules,
+  ToastAndroid,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-community/async-storage';
 import {Colors} from '../../components/Color';
 import CurrencyModal from '../../components/CurrencyModal';
 import Header from '../../components/Header';
-import LoadingIndicator from '../../components/LoadingIndicator';
 import {AppProvider} from '../../components/Provider';
 
 const nativeModule = NativeModules.MoneyFormat;
 const RowItem = ({title, onPress = () => {}, userPrefer}) => {
   return (
-    <View style={styles.rowContainer}>
-      <Text style={styles.label}>Currency</Text>
+    <View style={{}}>
       <View
         style={{
           flexDirection: 'row',
@@ -36,8 +36,10 @@ const RowItem = ({title, onPress = () => {}, userPrefer}) => {
           }}
           onPress={onPress}
           activeOpacity={1}>
-          <Text style={styles.rowText}>Default {title}</Text>
-          <Text style={[styles.rowText]}>{userPrefer}</Text>
+          <Text style={styles.rowText}>{title}</Text>
+          <Text style={[styles.rowText, styles.userPreferText]}>
+            {userPrefer}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -76,28 +78,49 @@ const Settings = () => {
   const [notificationSound, setNotificationSound] =
     React.useState(notification_sound);
   const [androidVersion, setAndroidVersion] = React.useState(null);
+  const [showTimePicker, setShowTimePicker] = React.useState(false);
+  const [userPreferTime, setUserPreferTime] = React.useState(null);
   const {
     asyncItem: {
       currency,
       notification_on,
       notification_sound,
       notification_vibrate,
+      currencySymbol,
     },
     setAsyncFromConsumer,
   } = React.useContext(AppProvider);
-  console.log(notification_on);
-  const selectCurrency = React.useCallback(newCurrency => {
-    if (newCurrency !== currency) {
-      setAsyncFromConsumer('currency', newCurrency);
-    }
+
+  console.log('Currency Symbol', currencySymbol);
+  React.useEffect(() => {
+    (async function () {
+      const getTimeFromStorage = await AsyncStorage.getItem(
+        'User-Notification-Time',
+      );
+      console.log(getTimeFromStorage);
+      if (getTimeFromStorage) {
+        setUserPreferTime(JSON.parse(getTimeFromStorage));
+      }
+    })();
   }, []);
+  const selectCurrency = React.useCallback(
+    (newCurrency, newCurrencySymbol) => {
+      console.log(newCurrencySymbol);
+      if (newCurrency !== currency) {
+        setAsyncFromConsumer({
+          currencySymbol: newCurrencySymbol,
+          currency: newCurrency,
+        });
+      }
+    },
+    [currency],
+  );
   const goToSetting = () => {
     Linking.openSettings().catch(er => {
       console.log(er);
     });
   };
   React.useEffect(() => {
-    console.log(nativeModule);
     try {
       nativeModule.getAndroidVersion(version => {
         if (version != null) {
@@ -117,22 +140,75 @@ const Settings = () => {
     });
   };
   const openPlayStore = () => {
-    Linking.openURL('market://details?id=com.vidown');
+    try {
+      Linking.openURL('market://details?id=com.vidown');
+    } catch (_) {}
   };
+
+  const onNotificationTimeClicked = () => {
+    setShowTimePicker(!showTimePicker);
+  };
+  const onChangeTime = (_, time: Date) => {
+    if (time) {
+      userPreferNotificationTime(time);
+      setUserPreferTime(time);
+    }
+    setShowTimePicker(false);
+  };
+
+  const userPreferNotificationTime = async (time: Date) => {
+    try {
+      await AsyncStorage.setItem(
+        'User-Notification-Time',
+        JSON.stringify(time),
+      );
+    } catch (err) {
+      //show err to user;
+    }
+  };
+
+  const toHourandMinute = () => {
+    if (userPreferTime) {
+      const date = new Date(userPreferTime);
+      const minuteFormat =
+        date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes();
+      return `${date.getHours()}:${minuteFormat}`;
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header isBackable headerText="Settings" />
-      <View style={{marginTop: 10}}>
-        <RowItem
-          title="Currency"
-          userPrefer={currency}
-          onPress={() => {
-            setShowCurrencyPicker(true);
-          }}
-        />
+      <View
+        style={{
+          marginTop: 10,
+        }}>
+        <View
+          style={{
+            backgroundColor: '#fff',
+            borderWidth: 1,
+            borderColor: '#eee',
+            padding: 10,
+            marginBottom: 10,
+          }}>
+          <Text style={styles.label}>Currency</Text>
+          <RowItem
+            title="Currency"
+            userPrefer={currency}
+            onPress={() => {
+              setShowCurrencyPicker(true);
+            }}
+          />
+        </View>
+
         <View style={styles.rowContainer}>
           <Text style={styles.label}>Notification</Text>
           <View>
+            <RowItem
+              title="Notification Time"
+              onPress={onNotificationTimeClicked}
+              userPrefer={userPreferTime ? `${toHourandMinute()}` : '5:00'}
+            />
             <RowWithSwitch
               label="Notification Sound"
               value={notificationSound}
@@ -208,6 +284,14 @@ const Settings = () => {
           setCurrency={selectCurrency}
         />
       )}
+      {showTimePicker && (
+        <DateTimePicker
+          onChange={onChangeTime}
+          value={new Date()}
+          mode="time"
+          is24Hour
+        />
+      )}
     </View>
   );
 };
@@ -221,12 +305,13 @@ const styles = StyleSheet.create({
   rowContainer: {
     // marginHorizontal: 20,
     backgroundColor: '#fff',
-    // marginTop: 10,
-    // paddingVertical: 5,
     padding: 10,
-    marginTop: 10,
     borderWidth: 1,
     borderColor: '#eee',
+    marginBottom: 10,
+    // marginTop: 10,
+    // paddingVertical: 5,
+
     // justifyContent: 'space-between',
     // alignItems: 'center',
     // flexDirection: 'row',
@@ -246,6 +331,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     fontWeight: '600',
+  },
+  userPreferText: {
+    color: Colors.primary,
+    fontFamily: 'OpenSans-Bold',
   },
 });
 

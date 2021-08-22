@@ -45,7 +45,6 @@ public class MoneyFormatModule extends ReactContextBaseJavaModule {
     public void getCurrency(double amount,String currency, Callback  c){
         NumberFormat format = NumberFormat.getCurrencyInstance();
         format.setMaximumFractionDigits(2);
-        format.setCurrency(Currency.getInstance(currency));
         c.invoke(format.format(amount));
     }
 

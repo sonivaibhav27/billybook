@@ -124,9 +124,6 @@ export const paidBills = (
 };
 
 export const returnPaginatedData = (startFrom, end, data: Array) => {
-  // data.map(a => {
-  //   console.log(a.due);
-  // });
   return data.slice(startFrom, end + 1);
 };
 

@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     color: '#000',
-    fontFamily: 'OpenSans-Bold',
+    fontFamily: 'OpenSans-SemiBold',
   },
   hitSlop: {
     top: 10,

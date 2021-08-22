@@ -5,8 +5,8 @@ import {
   Text,
   ActivityIndicator,
   TouchableOpacity,
-  ToastAndroid,
   StyleSheet,
+  View,
 } from 'react-native';
 import lodash from 'lodash';
 import {returnPaginatedData} from '../databases/realm.helper';
@@ -15,13 +15,6 @@ import NewCard from './NewCard';
 
 const {width, height} = Dimensions.get('window');
 
-function EmptyListComponent() {
-  return (
-    <TouchableOpacity>
-      <Text>Loa </Text>
-    </TouchableOpacity>
-  );
-}
 function ListFooterComponent({loadMoreBills, currentCursorForPagination}) {
   return (
     <TouchableOpacity
@@ -45,6 +38,16 @@ function ListFooterComponent({loadMoreBills, currentCursorForPagination}) {
   );
 }
 
+function ListEmptyComponent() {
+  return (
+    <View style={styles.emptyBillContainer}>
+      <Text style={styles.emptyBillText}>
+        No Bills to show. {'\n'} Create Some.{' '}
+      </Text>
+    </View>
+  );
+}
+
 class OptimizedFlatist extends React.Component {
   constructor(props) {
     super(props);
@@ -54,10 +57,11 @@ class OptimizedFlatist extends React.Component {
     };
   }
   loadMoreBills = () => {
-    console.log('[OptimizedFlatlist] Called');
     if (this.state.listData.length === this.props.allData.length) {
       return;
     }
+    console.log('[OptimizedFlatlist] Called');
+
     let returnData = returnPaginatedData(
       this.state.currentCursorForPagination,
       this.state.currentCursorForPagination + 9,
@@ -124,6 +128,7 @@ class OptimizedFlatist extends React.Component {
         onEndReached={this.loadMoreBills}
         onEndReachedThreshold={0}
         data={listData}
+        ListEmptyComponent={ListEmptyComponent}
         renderItem={this.renderItem}
         keyExtractor={this.keyExtractor}
         style={styles.container}
@@ -138,7 +143,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundColor,
     marginTop: 10,
     flex: 1,
-    // alignSelf: 'center',
+  },
+  emptyBillContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: height * 0.5,
+    width,
+  },
+  emptyBillText: {
+    fontFamily: 'OpenSans-Bold',
+    textAlign: 'center',
   },
 });
 

@@ -43,7 +43,7 @@ const CurrencyModal = ({closeModal, setCurrency}) => {
       <TouchableOpacity
         activeOpacity={1}
         onPress={() => {
-          setCurrency(item.code);
+          setCurrency(item.code, item.symbol);
           animatedNode(0);
           closeModal();
         }}

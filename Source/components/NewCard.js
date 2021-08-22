@@ -15,29 +15,28 @@ import PressableButton from './PressableButton';
 import {deleteBill} from '../databases/realm.helper';
 import BillSchema from '../DB/NewSch';
 import {Colors} from './Color';
+import {useContext} from 'react';
+import {AppProvider} from './Provider';
 
 const {width} = Dimensions.get('window');
 
 const nativeModule = NativeModules.MoneyFormat;
-const RowItem = React.memo(
-  ({label, itemText, style, multiline = 1, ...rest}) => {
-    return (
-      <View style={[styles.rowContainer, style]}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text
-          lineBreakMode="tail"
-          numberOfLines={multiline}
-          {...rest}
-          style={styles.rowText}>
-          {itemText}
-        </Text>
-      </View>
-    );
-  },
-);
+const RowItem = ({label, itemText, style, multiline = 1, ...rest}) => {
+  return (
+    <View style={[styles.rowContainer, style]}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text
+        lineBreakMode="tail"
+        numberOfLines={multiline}
+        {...rest}
+        style={[styles.rowText, label == 'Amount' && {fontWeight: 'bold'}]}>
+        {itemText}
+      </Text>
+    </View>
+  );
+};
 
 class _NewCard extends React.Component {
-  // const navigation = useNavigation();
   constructor(props) {
     super(props);
     this.state = {
@@ -45,21 +44,22 @@ class _NewCard extends React.Component {
     };
   }
 
+  setAmountWithCurrency = () => {
+    nativeModule.getCurrency(
+      this.props.item.billAmount,
+      this.props.appContext.asyncItem.currency,
+      amount => {
+        this.setState({
+          amountRefined: `${
+            this.props.appContext.asyncItem.currencySymbol
+          }${amount.slice(1)}`,
+        });
+      },
+    );
+  };
   componentDidMount() {
-    nativeModule.getCurrency(this.state.amountRefined, 'EUR', amount => {
-      this.setState({amountRefined: amount});
-    });
+    this.setAmountWithCurrency();
   }
-  // React.useEffect(() => {
-  //   // nativeModule.getCurrency(item.billAmount, 'EUR', amount => {
-  //   //   setAmountRefined(amount);
-  //   // });
-  //   // setAmountRefined(
-  //   //   `${userPreferences.asyncItem.currency} ${item.billAmount
-  //   //     .toFixed(2)
-  //   //     .replace(/\d(?=(\d{3})+\.)/g, '$&,')}`,
-  //   // );
-  // }, [userPreferences]);
 
   componentDidUpdate(prevProps) {
     if (prevProps.item.billAmount !== this.props.item.billAmount) {
@@ -97,20 +97,25 @@ class _NewCard extends React.Component {
 
   shouldComponentUpdate = nextProps => {
     const {item} = this.props;
-    // console.log('[Next Props]', nextProps);
+
     if (
       item.billName === nextProps.item.billName &&
       item.paidDates.length === nextProps.item.paidDates.length &&
-      item.billAmount === nextProps.item.billAmount
+      item.billAmount === nextProps.item.billAmount &&
+      typeof this.state.amountRefined === 'string' &&
+      this.state.amountRefined
+        .slice(0, nextProps.appContext.asyncItem.currencySymbol.length)
+        .toLowerCase() ==
+        nextProps.appContext.asyncItem.currencySymbol.toLowerCase()
     ) {
       return false;
     }
+    this.setAmountWithCurrency();
     return true;
   };
 
   render() {
     const {item, overdue, isPaid} = this.props;
-    console.log(typeof item._id);
     return (
       <PressableButton
         disabled={isPaid}
@@ -191,7 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   rowLabel: {
-    fontSize: 12,
+    fontSize: 10,
     // fontWeight: '100',
     color: '#888',
     fontFamily: 'OpenSans-Light',
@@ -217,8 +222,11 @@ const styles = StyleSheet.create({
 
 const NewCard = props => {
   const navigation = useNavigation();
-  return <_NewCard navigation={navigation} {...props} />;
+  const appContext = useContext(AppProvider);
+  return (
+    <_NewCard appContext={appContext} navigation={navigation} {...props} />
+  );
 };
 
-export default React.memo(NewCard);
-// export default NewCard;
+// export default React.memo(NewCard);
+export default NewCard;

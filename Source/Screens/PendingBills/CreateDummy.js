@@ -22,6 +22,8 @@ import Button from '../../components/Button';
 import BillSchema from '../../DB/NewSch';
 import TypeModal from '../../components/TypeModal';
 import LoadingIndicator from '../../components/LoadingIndicator';
+import NotifyService from '../../NotificationConfig/NotifyService';
+import AsyncStorage from '@react-native-community/async-storage';
 export default ({route}) => {
   const {bill} = route.params;
   console.log('[Bill]', bill);
@@ -43,13 +45,42 @@ export default ({route}) => {
   const [frequencyForHowManyTimes, setFrequencyForHowManyTimes] =
     React.useState('');
 
+  const [userNotificationTime, setUserNotificationTime] = React.useState({
+    hour: 16,
+    minutes: 0,
+  });
+
+  React.useEffect(() => {
+    (async function () {
+      const notificationTime = await AsyncStorage.getItem(
+        'User-Notification-Time',
+      );
+      if (notificationTime) {
+        try {
+          const jsonTime = JSON.parse(notificationTime);
+          const toDate = moment(jsonTime);
+          setUserNotificationTime({
+            hour: toDate.hour(),
+            minutes: toDate.minute(),
+          });
+        } catch (err) {}
+      }
+    })();
+  }, []);
   const createBill = () => {
+    NotifyService._createTimeStampArrayForNotification(
+      10,
+      'days',
+      userNotificationTime,
+    );
+    return;
     if (route.params.title === 'Edit Bill') {
       modifyBill(BillSchema, bill, {
         name: billName,
       });
     } else {
       setStartCreatingBills(true);
+
       createBillInDatabase(
         billName,
         billAmount,
@@ -59,24 +90,11 @@ export default ({route}) => {
         {count: 20},
         BillSchema,
       ).then(() => {
+        NotifyService.createScheduleNotification('google', 10, 'days');
         setStartCreatingBills(false);
       });
     }
     console.log(billAmount, billName, billType, billDue);
-
-    // saveToDatabase(billName, Number(billAmount), billDue, billRemark, billType);
-    // this.setState({showAnimation: false});
-    // if (!billAmount || !billName || !billType || !billDue) {
-    //   ToastAndroid.showWithGravityAndOffset(
-    //     'Please fill the required field',
-    //     ToastAndroid.LONG,
-    //     ToastAndroid.BOTTOM,
-    //     0,
-    //     100,
-    //   );
-    //   return;
-    // }
- 
   };
 
   const setType = React.useCallback(item => {
