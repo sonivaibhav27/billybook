@@ -33,6 +33,10 @@ class App extends React.Component {
     NotifyService.clearNotifAndScheduleNotications();
   };
 
+  componentWillUnmount() {
+    NotifyService.makeOverdueBillNotification();
+  }
+
   getAysncData = async () => {
     try {
       const value = await AsyncStorage.getItem('user_preferences');

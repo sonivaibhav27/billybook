@@ -15,9 +15,11 @@ class NotifyManager {
   }
 
   makeOverdueBillNotification(noOfOverdueBill) {
-    this.createLocalNotification(
-      `You have ${noOfOverdueBill} bills that are overdue`,
-    );
+    if (noOfOverdueBill > 0) {
+      this.createLocalNotification(
+        `You have ${noOfOverdueBill} bills that are overdue`,
+      );
+    }
   }
 
   configureNotifications() {

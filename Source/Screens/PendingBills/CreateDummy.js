@@ -153,10 +153,6 @@ export default ({route}) => {
         />
         <FormComponent
           value={moment(billDue).format('MMM D, YYYY')}
-          // onChangeText={e => {
-          //   this.setState({remark: e});
-          // }}
-          // maxLength
           label="Due on"
           date
           onPress={() => {
@@ -386,7 +382,7 @@ export default ({route}) => {
           backgroundColor={Colors.primary}
           textColor={'#fff'}
           text={route.params.title}
-          containerStyle={{width: 250, alignSelf: 'center'}}
+          containerStyle={{width: 180, alignSelf: 'center'}}
         />
       </View>
       {openModal && (

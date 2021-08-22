@@ -128,6 +128,7 @@ const ListOfBills = React.memo(
       const [overdueBills, setOverDueBills] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
       const [allData, setAllData] = React.useState([]);
+      const [allOverdueData, setAllOverdueData] = React.useState([]);
 
       const _calculateMontlyExpense = (data: Array) => {
         const sumBillAmount = data.reduce((acc, current) => {
@@ -148,6 +149,7 @@ const ListOfBills = React.memo(
         let pgPendData = returnPaginatedData(0, 10, allBillPendingData);
         setData(pgPendData);
         setAllData(allBillPendingData);
+        setAllOverdueData(d);
         setOverDueBills(paginated);
         timeout.current = setTimeout(() => {
           setLoading(false);
@@ -228,7 +230,7 @@ const ListOfBills = React.memo(
                     key={index}
                     data={overdueBills}
                     overdue={true}
-                    allData={[]}
+                    allData={allOverdueData}
                   />
                 );
               }
@@ -395,10 +397,8 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 20,
-    textTransform: 'capitalize',
-    // fontWeight: 'bold',
-    fontFamily: 'OpenSans-SemiBold',
-    letterSpacing: 1.05,
+    textTransform: 'lowercase',
+    fontFamily: 'OpenSans-Bold',
     color: '#000',
   },
   topNavContainer: {
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   indicator: {
     height: 4,
     width: 40,
-    backgroundColor: 'black',
+    backgroundColor: Colors.primary,
     borderRadius: 50,
   },
   bagdeCountContainer: {
@@ -461,7 +461,6 @@ const styles = StyleSheet.create({
   addNewBillText: {
     color: '#FFF',
     fontSize: 16,
-    // fontWeight: 'bold',
     marginLeft: 10,
     fontFamily: 'OpenSans-Bold',
     // textTransform: 'uppercase',
@@ -481,12 +480,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// const EnhanceComponent = withObservables([], () => {
-//   return {
-//     pendingBillsObservers: observers(),
-//     overdueBillObservers: overdueObserves(),
-//     overdueCountObserver: overdueBillCountObservers(),
-//     pendingThisMonthObserver: withObserveableThisMonthBill(),
-//   };
-// });
 export default PendingBillNew;
